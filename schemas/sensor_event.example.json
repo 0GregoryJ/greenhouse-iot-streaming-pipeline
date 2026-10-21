@@ -1,0 +1,12 @@
+
+{
+    "schema_version": 1,
+    "event_id": "550e8400-e29b-41d4-a716-446655440000",
+    "sensor_id": "soil-001",
+    "gateway_id": "pi-001",
+    "timestamp": "2026-10-20T19:30:00Z",
+    "measurement_type": "soil_moisture",
+    "value": 475,
+    "unit": "raw_capacitance"
+  }
+  
