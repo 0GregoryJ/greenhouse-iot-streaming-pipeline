@@ -11,6 +11,7 @@ Intended to run continuously on the Raspberry Pi.
 import json
 import os
 import sqlite3
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -40,6 +41,8 @@ def initialize_database():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
     with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("PRAGMA synchronous = FULL")
+        conn.execute("PRAGMA busy_timeout = 30000")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS sensor_events (
                 event_id TEXT PRIMARY KEY,
@@ -60,36 +63,62 @@ def on_connect(client, userdata, flags, reason_code, properties):
 
 # Decodes JSON, validates against schema, inserts into SQLite table. Runs when Mosquitto delivers an event.
 def on_message(client, userdata, message):
+    """Persist a measurement before acknowledging MQTT delivery."""
+
     try:
         event = json.loads(message.payload.decode("utf-8"))
         validator.validate(event)
 
-        received_at = datetime.now(timezone.utc).isoformat()
+    except (ValueError, ValidationError) as error:
+        # Invalid messages cannot enter the outbox.
+        # Log them explicitly; a later improvement will quarantine them.
+        print(f"Invalid event: {error}")
 
-        with sqlite3.connect(DB_PATH) as conn:
+        # Acknowledge intentionally rejected messages to avoid
+        # repeatedly processing the same malformed payload.
+        rc = client.ack(message.mid, message.qos)
+        if rc != mqtt.MQTT_ERR_SUCCESS:
+            raise RuntimeError(f"MQTT acknowledgment failed: {rc}")
+
+        return
+
+    received_at = datetime.now(timezone.utc).isoformat()
+
+    try:
+        # The inner context commits before we acknowledge the message.
+        with sqlite3.connect(DB_PATH, timeout=30) as conn:
             result = conn.execute(
                 """
                 INSERT OR IGNORE INTO sensor_events
-                (event_id, event_json, received_at)
+                    (event_id, event_json, received_at)
                 VALUES (?, ?, ?)
                 """,
                 (
                     event["event_id"],
                     json.dumps(event),
-                    received_at
-                )
+                    received_at,
+                ),
             )
 
-        if result.rowcount == 1:
-            print(f"Saved: {event['measurement_type']} = {event['value']}")
-        else:
-            print(f"Duplicate ignored: {event['event_id']}")
+            inserted = result.rowcount == 1
 
-    except (ValueError, ValidationError) as error:
-        print(f"Invalid event: {error}")
+    except sqlite3.Error:
+        # Do not acknowledge a message that failed to persist.
+        # Allow the exception to terminate the process so systemd
+        # can restart it and the broker can redeliver the message.
+        logging.exception("SQLite persistence failed")
+        raise
 
-    except sqlite3.Error as error:
-        print(f"Database error: {error}")
+    # We only get here after the SQLite transaction has committed.
+    rc = client.ack(message.mid, message.qos)
+
+    if rc != mqtt.MQTT_ERR_SUCCESS:
+        raise RuntimeError(f"MQTT acknowledgment failed: {rc}")
+
+    if inserted:
+        print(f"Saved: {event['measurement_type']} = {event['value']}")
+    else:
+        print(f"Duplicate ignored: {event['event_id']}")
 
 # Main service
 def main():
@@ -100,7 +129,10 @@ def main():
     # Connect to Mosquitto, subscribe to greenhouse/telemetry topic, insert events into SQLite table.
     client = mqtt.Client(
         mqtt.CallbackAPIVersion.VERSION2,
-        client_id="pi-sqlite-ingestor"
+        client_id="pi-sqlite-ingestor",
+        protocol=mqtt.MQTTv311,
+        clean_session=False,
+        manual_ack=True,
     )
 
     client.username_pw_set(
