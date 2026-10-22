@@ -1,0 +1,9 @@
+[Unit]
+Description=Greenhouse SQLite Outbox Retention Cleanup
+
+[Service]
+Type=oneshot
+User=greenhousepi
+Group=greenhousepi
+WorkingDirectory=/home/greenhousepi/greenhouse-iot-streaming-pipeline
+ExecStart=/home/greenhousepi/greenhouse-iot-streaming-pipeline/.venv/bin/python gateway/cleanup.py --retention-hours 24 --batch-size 1000

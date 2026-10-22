@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Greenhouse SQLite Cleanup Hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=greenhouse-cleanup.service
+
+[Install]
+WantedBy=timers.target
