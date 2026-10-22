@@ -1,0 +1,22 @@
+[Unit]
+Description=Greenhouse SQLite to Kafka Producer
+Wants=network-online.target tailscaled.service
+After=network-online.target tailscaled.service
+
+[Service]
+Type=simple
+
+# Allow for 60-second kafka delivery results window
+TimeoutStopSec=90
+
+# Run as an unprivileged user.
+User=greenhousepi
+Group=greenhousepi
+
+WorkingDirectory=/home/greenhousepi/greenhouse-iot-streaming-pipeline
+
+# Read pending SQLite events and publish them to AWS Kafka.
+ExecStart=/home/greenhousepi/greenhouse-iot-streaming-pipeline/.venv/bin/python>
+
+# Restart after crashes or unexpected termination.
+Restart=on-failure

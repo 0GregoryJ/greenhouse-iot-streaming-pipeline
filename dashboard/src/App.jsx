@@ -3,6 +3,18 @@ import { useEffect, useState } from "react";
 const API_URL =
   "https://api.gregoryjoshua.com/api/v1/sensors/latest";
 
+const STALE_AFTER_MS = 30_000;
+
+function isStale(timestamp) {
+  if (!timestamp) return true;
+
+  const eventTime = new Date(timestamp).getTime();
+
+  if (!Number.isFinite(eventTime)) return true;
+
+  return Date.now() - eventTime > STALE_AFTER_MS;
+}
+
 function App() {
   const [readings, setReadings] = useState([]);
   const [error, setError] = useState(null);
@@ -40,15 +52,20 @@ function App() {
 
       {error && <p>API Error: {error}</p>}
 
-      {readings.map((reading) => (
-        <div key={`${reading.sensor_id}-${reading.measurement_type}`}>
-          <h2>{reading.measurement_type}</h2>
-          <p>
-            {reading.value} {reading.unit}
-          </p>
-          <small>Updated: {reading.timestamp}</small>
-        </div>
-      ))}
+      {readings.map((reading) => {
+        const stale = isStale(reading.timestamp);
+
+        return (
+          <div key={`${reading.sensor_id}-${reading.measurement_type}`}>
+            <h3>{reading.measurement_type}</h3>
+            <p>{reading.value} {reading.unit}</p>
+
+            <span className={stale ? "status stale" : "status online"}>
+              {stale ? "Stale" : "Live"}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
