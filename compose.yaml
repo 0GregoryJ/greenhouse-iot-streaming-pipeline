@@ -1,0 +1,56 @@
+
+services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+    volumes:
+      - redis_data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  live-consumer:
+    build:
+      context: .
+      dockerfile: consumers/live/Dockerfile
+
+    restart: unless-stopped
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:?Kafka address required}
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-greenhouse.sensor-readings}
+      KAFKA_CONSUMER_GROUP: ${KAFKA_CONSUMER_GROUP:-greenhouse-live-dev}
+      REDIS_HOST: redis
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+
+    restart: unless-stopped
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+
+    ports:
+      # Expose the API to your MacBook, not the entire network.
+      # On EC2, an HTTPS reverse proxy will connect locally.
+      - "127.0.0.1:8000:8000"
+
+volumes:
+  redis_data:
