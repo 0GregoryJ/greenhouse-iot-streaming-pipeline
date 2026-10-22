@@ -58,8 +58,8 @@ Dashed nodes are [TBD].
 | Sensors and ESP32 | Read soil and air values and publish them to MQTT | [TBD] |
 | Load simulator | Publishes synthetic events at volumes above the physical sensors | Working |
 | MQTT broker | Entry point on the Pi | Working |
-| Gateway ingest | Validates events and writes them to the SQLite outbox | Working |
-| Kafka producer | Drains the outbox to Kafka | Working |
+| Gateway ingest | Validates events and writes them to the SQLite outbox. Runs as a `systemd` service | Working |
+| Kafka producer | Drains the outbox to Kafka. Runs as a `systemd` service | Working |
 | Kafka | Durable log shared by both paths. Runs as a `systemd` service on EC2 | Working |
 | Flink, Redis, FastAPI | Live path: current state behind a live dashboard | [TBD] |
 | Snowflake, dbt | Analytics path: history and models behind a dashboard | [TBD] |
@@ -125,7 +125,7 @@ python3 sensor_simulator/simulate.py
 
 ### Gateway (Raspberry Pi)
 
-Requires Raspberry Pi OS and a Mosquitto broker on port 1883. Run both services; they are independent processes.
+Requires Raspberry Pi OS and a Mosquitto broker on port 1883.
 
 ```bash
 cd gateway
@@ -134,11 +134,16 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cd ..
 cp .env.example .env
+```
+
+`ingest.py` and `kafka_producer.py` are independent processes. On the Pi, each runs as a `systemd` service. The unit files are not in the repo yet. [TBD]
+
+To run either by hand:
+
+```bash
 python3 gateway/ingest.py          # MQTT -> SQLite
 python3 gateway/kafka_producer.py  # SQLite -> Kafka
 ```
-
-Running both as `systemd` services on the Pi is [TBD].
 
 ### Configuration
 
@@ -186,12 +191,21 @@ Both paths read from Kafka and are [TBD].
 ## Repository layout
 
 ```text
-assets/                            header image and badges
-gateway/ingest.py                  MQTT to SQLite outbox
-gateway/kafka_producer.py          SQLite outbox to Kafka
-gateway/requirements.txt           Pi dependencies
-sensor_simulator/simulate.py       load simulator
-sensor_simulator/requirements.txt  Mac dependencies
-schemas/                           event schema and example
-.env.example                       shared settings
+.
+├── gateway/                      Raspberry Pi services
+│   ├── ingest.py                 MQTT -> SQLite outbox
+│   ├── kafka_producer.py         SQLite outbox -> Kafka
+│   ├── requirements.txt
+│   └── data/                     SQLite database, created at runtime
+├── sensor_simulator/             Load simulator (Mac)
+│   ├── simulate.py
+│   └── requirements.txt
+├── schemas/                      Shared event contract
+│   ├── sensor_event.schema.json
+│   └── sensor_event.example.json
+├── assets/                       README header and badges
+├── .env.example                  Settings shared by all scripts
+└── README.md
 ```
+
+Code for Flink, the API, dbt, and the dashboards will be added alongside these. [TBD]
