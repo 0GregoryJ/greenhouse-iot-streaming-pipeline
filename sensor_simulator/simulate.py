@@ -1,8 +1,10 @@
-#---
-# Simulates sensor measurements by generating 3 synthetic measurements per second,
-# validating measurements against json schema in schemas/, and publishing to
-# MQTT broker on raspberry pi
-#---
+"""
+Simulates sensor measurements by generating 3 synthetic measurements per second,
+validating measurements against json schema in schemas/, and publishing to
+MQTT broker on the Raspberry Pi.
+
+Intended to run continuously (optionally) to simulate load greater than that of the physical sensors.
+"""
 import json
 import os
 import random
@@ -14,6 +16,7 @@ from dotenv import load_dotenv
 import paho.mqtt.client as mqtt
 from jsonschema import Draft202012Validator, FormatChecker
 
+# Configuration
 ROOT = Path(__file__).resolve().parent.parent
 
 load_dotenv(ROOT / ".env")
@@ -41,6 +44,7 @@ soil_moisture = 475.0
 air_temperature = 23.0
 relative_humidity = 65.0
 
+# Creates an event given necessary values
 def make_event(sensor_id, measurement_type, value, unit, timestamp):
     event = {
         "schema_version": 1,
@@ -56,6 +60,7 @@ def make_event(sensor_id, measurement_type, value, unit, timestamp):
     validator.validate(event)
     return event
 
+# Main service
 def main():
     global soil_moisture, air_temperature, relative_humidity
 
@@ -63,8 +68,8 @@ def main():
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
     client.username_pw_set(
-        "greenhousepi",
-        os.getenv("MQTT_PASSWORD")
+        MQTT_USERNAME,
+        MQTT_PASSWORD
     )
 
     client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)

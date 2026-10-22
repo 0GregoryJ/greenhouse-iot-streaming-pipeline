@@ -1,12 +1,12 @@
-#---
-# Subscribes to the greenhouse/telemetry MQTT topic,
-# validates incoming events against the JSON schema,
-# and inserts valid, non-duplicate events into SQLite.
-#
-# Initializes the database and table if they don't exist.
-# Provides a persistent buffer between MQTT ingestion
-# and the downstream Kafka producer.
-#---
+"""
+Subscribes to the greenhouse/telemetry MQTT topic, validates incoming events
+against the JSON schema, and inserts valid, non-duplicate events into SQLite.
+
+Initializes the database and table if they don't exist.
+Provides a persistent buffer between MQTT ingestion and the Kafka producer.
+
+Intended to run continuously on the Raspberry Pi.
+"""
 
 import json
 import os
@@ -18,7 +18,7 @@ import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
-
+# Configuration
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "gateway" / "data" / "sensor_events.db"
 
@@ -91,7 +91,7 @@ def on_message(client, userdata, message):
     except sqlite3.Error as error:
         print(f"Database error: {error}")
 
-
+# Main service
 def main():
 
     # Create database and table if they don't already exist.
