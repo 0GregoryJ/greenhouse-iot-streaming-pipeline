@@ -1,16 +1,15 @@
 
 """
-Kafka publisher for the Raspberry Pi gateway.
+SQLite-to-Kafka publisher for the Raspberry Pi gateway.
 
-Reads sensor events from the local SQLite outbox and forwards them to
-Kafka. Events remain pending until Kafka confirms delivery.
+Intended to run on the Raspberry Pi gateway continuously.
 
-Delivery semantics:
-    - At-least-once publishing from SQLite to Kafka.
-    - Kafka producer idempotence enabled for supported producer retries.
-    - Downstream consumers must deduplicate by event_id when necessary.
-
-Intended to run continuously on the Raspberry Pi.
+Guarantees:
+- Events are selected from the local SQLite outbox.
+- Only Kafka-acknowledged events are marked delivered.
+- No new batch starts while a previous batch has in-flight messages.
+- Failed and unconfirmed events remain in SQLite for future retries.
+- Delivery is at-least-once, not exactly-once.
 """
 
 import logging
@@ -18,26 +17,32 @@ import os
 import signal
 import sqlite3
 import time
+from contextlib import closing
+from datetime import datetime, timezone
 from pathlib import Path
 
 from confluent_kafka import Producer
 from dotenv import load_dotenv
 
 
-# Configuration
 ROOT = Path(__file__).resolve().parent.parent
 DB_PATH = ROOT / "gateway" / "data" / "sensor_events.db"
 
 load_dotenv(ROOT / ".env")
 
-KAFKA_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
-KAFKA_TOPIC = os.getenv("KAFKA_TOPIC", "greenhouse.sensor-readings")
+KAFKA_SERVERS = os.environ["KAFKA_BOOTSTRAP_SERVERS"]
+KAFKA_TOPIC = os.getenv(
+    "KAFKA_TOPIC", "greenhouse.sensor-readings"
+)
 
 BATCH_SIZE = int(os.getenv("KAFKA_BATCH_SIZE", "100"))
 RETRY_SECONDS = float(os.getenv("KAFKA_RETRY_SECONDS", "5"))
+DELIVERY_TIMEOUT_MS = int(
+    os.getenv("KAFKA_DELIVERY_TIMEOUT_MS", "60000")
+)
 
-if BATCH_SIZE < 1 or RETRY_SECONDS <= 0:
-    raise ValueError("Batch size and retry interval must be positive.")
+if BATCH_SIZE < 1 or RETRY_SECONDS <= 0 or DELIVERY_TIMEOUT_MS < 1000:
+    raise ValueError("Invalid Kafka producer configuration")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,21 +54,18 @@ logger = logging.getLogger("greenhouse.kafka_producer")
 running = True
 
 
-# Shutdown handling
 def request_shutdown(signum, frame):
-    """Request a graceful stop after the current publish batch."""
     global running
     running = False
     logger.info("Shutdown requested")
 
 
-signal.signal(signal.SIGINT, request_shutdown)
 signal.signal(signal.SIGTERM, request_shutdown)
+signal.signal(signal.SIGINT, request_shutdown)
 
 
-# SQLite access
 def fetch_pending(conn):
-    """Read the oldest events not yet acknowledged by Kafka."""
+    """Fetch the oldest undelivered events in a bounded batch."""
     return conn.execute(
         """
         SELECT event_id, event_json
@@ -77,18 +79,11 @@ def fetch_pending(conn):
 
 
 def mark_delivered(conn, event_ids):
-    """
-    Mark only Kafka-acknowledged events as delivered.
-
-    The update is committed as one SQLite transaction.
-    """
+    """Atomically mark only Kafka-acknowledged events as published."""
     if not event_ids:
         return
 
-    published_at = time.strftime(
-        "%Y-%m-%dT%H:%M:%SZ",
-        time.gmtime(),
-    )
+    published_at = datetime.now(timezone.utc).isoformat()
 
     with conn:
         conn.executemany(
@@ -102,27 +97,36 @@ def mark_delivered(conn, event_ids):
         )
 
 
-# Kafka publishing
 def publish_batch(producer, conn, rows):
-    """
-    Publish one batch and record successful Kafka acknowledgments.
+    """Publish and resolve one batch before returning.
 
-    Acknowledged events are marked delivered in SQLite only after
-    the Kafka client's delivery callbacks have completed.
+    Delivery callbacks are scoped to this batch. The function does not
+    return while messages from this batch remain in the producer queue.
     """
-    acknowledged = []
-    failed = []
+    acknowledged = set()
+    failed = set()
+    queued = 0
+    enqueue_interrupted = False
 
     def delivery_callback(err, msg):
+        event_id = msg.key().decode("utf-8")
+
         if err is not None:
-            failed.append((msg.key(), str(err)))
-            return
+            failed.add(event_id)
+            logger.error(
+                "Kafka delivery failed event_id=%s: %s",
+                event_id,
+                err,
+            )
+        else:
+            acknowledged.add(event_id)
 
-        acknowledged.append(msg.key().decode("utf-8"))
-
-    queued = 0
-
+    # Enqueue a bounded group of events.
     for event_id, event_json in rows:
+        if not running:
+            enqueue_interrupted = True
+            break
+
         try:
             producer.produce(
                 topic=KAFKA_TOPIC,
@@ -133,62 +137,70 @@ def publish_batch(producer, conn, rows):
             queued += 1
 
         except BufferError:
-            # No message was queued for this event. Retry next cycle.
-            logger.warning("Kafka producer queue full")
+            logger.warning("Producer queue full")
+            enqueue_interrupted = True
             break
 
         except Exception:
             logger.exception(
-                "Unable to enqueue event_id=%s", event_id
+                "Unable to enqueue event_id=%s",
+                event_id,
             )
+            enqueue_interrupted = True
             break
 
-        # Serve delivery callbacks while publishing.
+        # Serve completed delivery callbacks.
         producer.poll(0)
 
-    # Wait for all queued messages to receive delivery results.
-    remaining = producer.flush(timeout=30)
+    # Wait in short intervals. Crucially, do not enqueue another
+    # batch while callbacks from this batch remain outstanding.
+    while producer.flush(timeout=1.0) > 0:
+        if not running:
+            logger.info(
+                "Shutdown requested; waiting for in-flight deliveries"
+            )
 
-    if remaining:
-        logger.warning(
-            "%s messages still unacknowledged after flush timeout",
-            remaining,
-        )
+        # Kafka client delivery.timeout.ms bounds delivery attempts.
+        # Keep waiting until every callback has received an outcome.
 
+    # At this point all queued messages have delivery results.
+    # A failed SQLite commit raises an error, leaving records pending.
     mark_delivered(conn, acknowledged)
 
-    if failed:
-        logger.warning(
-            "%s Kafka deliveries failed; events remain pending",
-            len(failed),
-        )
-
     logger.info(
-        "Queued=%s Acknowledged=%s Failed=%s PendingCallbacks=%s",
+        "Batch complete: fetched=%d queued=%d acknowledged=%d "
+        "failed=%d enqueue_interrupted=%s",
+        len(rows),
         queued,
         len(acknowledged),
         len(failed),
-        remaining,
+        enqueue_interrupted,
     )
 
-    return remaining == 0 and not failed
+    return (
+        len(acknowledged) == len(rows)
+        and not failed
+        and not enqueue_interrupted
+    )
 
 
-# Main service
 def main():
     producer = Producer({
         "bootstrap.servers": KAFKA_SERVERS,
         "security.protocol": "PLAINTEXT",
         "acks": "all",
         "enable.idempotence": True,
+        "delivery.timeout.ms": DELIVERY_TIMEOUT_MS,
         "client.id": "greenhouse-pi-001",
     })
 
-    logger.info("Connecting to Kafka: %s", KAFKA_SERVERS)
-    logger.info("Publishing to topic: %s", KAFKA_TOPIC)
+    logger.info("Kafka servers: %s", KAFKA_SERVERS)
+    logger.info("Kafka topic: %s", KAFKA_TOPIC)
 
-    with sqlite3.connect(DB_PATH, timeout=30) as conn:
+    # closing() ensures the SQLite connection actually closes.
+    with closing(sqlite3.connect(DB_PATH, timeout=30)) as conn:
         conn.execute("PRAGMA busy_timeout = 30000")
+        conn.execute("PRAGMA synchronous = FULL")
 
         while running:
             try:
@@ -201,24 +213,18 @@ def main():
 
                 success = publish_batch(producer, conn, rows)
 
-                if not success:
+                if not success and running:
                     logger.warning(
-                        "Batch incomplete; waiting before retry"
+                        "Incomplete batch; retrying in %s seconds",
+                        RETRY_SECONDS,
                     )
                     time.sleep(RETRY_SECONDS)
 
             except sqlite3.Error:
-                logger.exception("SQLite operation failed")
-                time.sleep(RETRY_SECONDS)
-
-    # Final best-effort drain. SQLite keeps unconfirmed events.
-    remaining = producer.flush(timeout=10)
-
-    if remaining:
-        logger.warning(
-            "Shutting down with %s unconfirmed messages",
-            remaining,
-        )
+                logger.exception(
+                    "SQLite failure; terminating for systemd recovery"
+                )
+                raise
 
     logger.info("Kafka publisher stopped")
 
