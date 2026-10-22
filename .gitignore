@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 gateway/data/
 **/__pycache__
+node_modules/
