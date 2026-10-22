@@ -1,0 +1,16 @@
+[Unit]
+Description=Greenhouse Gateway Health Check
+
+[Service]
+Type=oneshot
+User=greenhousepi
+Group=greenhousepi
+WorkingDirectory=/home/greenhousepi/greenhouse-iot-streaming-pipeline
+
+ExecStart=/home/greenhousepi/greenhouse-iot-streaming-pipeline/.venv/bin/python -u gateway/health.py
+
+StandardOutput=journal
+StandardError=journal
+
+# A warning is an expected monitoring result, not a service crash.
+SuccessExitStatus=1

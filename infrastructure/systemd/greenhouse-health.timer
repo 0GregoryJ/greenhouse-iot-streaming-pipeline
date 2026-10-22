@@ -1,0 +1,10 @@
+[Unit]
+Description=Run Greenhouse Gateway Health Check Every Minute
+
+[Timer]
+OnCalendar=*-*-* *:*:00
+Persistent=true
+Unit=greenhouse-health.service
+
+[Install]
+WantedBy=timers.target
