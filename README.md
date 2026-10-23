@@ -27,7 +27,7 @@
 
 An end-to-end streaming pipeline for greenhouse soil and air measurements. Events travel from MQTT through a durable Raspberry Pi outbox into Kafka on AWS. A consumer materializes the latest readings in Redis, FastAPI serves them, and a React dashboard displays them. A Snowflake and dbt branch for historical analytics is planned.
 
-**Status:** the live path runs end to end on simulated data. Physical sensors and historical analytics are planned. See [Status and roadmap](#status-and-roadmap).
+**Status:** the live path runs end to end on simulated data. Physical sensors and a historical analytics consumer are planned.
 
 **Live:** [Dashboard](https://greenhouse.gregoryjoshua.com) · [API health](https://api.gregoryjoshua.com/health). Readings show as *Stale* when the simulator is not running.
 
@@ -76,31 +76,50 @@ flowchart TB
 
 Dashed nodes and edges are planned.
 
-**Live path (implemented).** The Pi validates each event, stores it in SQLite, and publishes it to Kafka. A consumer on a second EC2 instance keeps the newest reading per sensor and metric in Redis. FastAPI reads only Redis, and the dashboard polls it every 3 seconds through Caddy.
+**Live path (implemented).** The Pi validates each event, stores it in SQLite, and publishes it to Kafka on an EC2 instance. A consumer on a second EC2 instance keeps the newest reading per sensor and metric in Redis. FastAPI reads only Redis, and the dashboard polls it every 3 seconds through Caddy.
 
 **Historical path (planned).** A separate consumer group will load the same topic into Snowflake, and dbt will model it for historical views in the dashboard. Kafka's 7-day retention lets this consumer be added without changing the live path.
 
 ## Key engineering features
 
-- **Durable edge buffering.** Ingest commits each valid event to SQLite before acknowledging MQTT, so a Kafka or network outage does not stop ingestion. Pending events stay on the Pi until Kafka confirms them.
-- **At-least-once delivery, handled explicitly.** An event is marked published only after Kafka acknowledges it. Duplicates are possible after a crash, so every event carries a unique `event_id` for deduplication. See [Reliability](#reliability-and-testing).
-- **Decoupled consumers.** Kafka separates the edge from consumers, and each consumer group tracks its own offsets.
-- **Timestamp-safe latest state.** The consumer updates Redis with an atomic Lua script that ignores readings older than the stored one, so replays and out-of-order events cannot overwrite newer data. The Kafka offset is committed only after the Redis write.
-- **Bounded Pi resources.** Batched publishing, a bounded retention job, and a health check cover memory, backlog, and disk on a small device.
-- **Operations.** systemd manages the gateway, Docker Compose manages the backend, and Caddy provides HTTPS. A read-only script verifies deployments, and GitHub Actions runs the tests.
+### Ingestion and delivery
 
-## Technology stack
+- **Schema-validated events.** Events follow a versioned JSON Schema that rejects unknown fields. The simulator validates before publishing and the gateway validates again on ingest, so malformed data never enters the outbox. Invalid events are logged and dropped.
+- **Durable edge buffering.** [`ingest.py`](gateway/ingest.py) uses a persistent MQTT QoS 1 session with manual acknowledgment. It commits each event to SQLite (`synchronous=FULL`) before acknowledging, so a Kafka or network outage does not stop ingestion. Pending events stay on the Pi until Kafka confirms them.
+- **Outbox publisher.** [`kafka_producer.py`](gateway/kafka_producer.py) sends the oldest pending events in batches of 100 with `acks=all` and an idempotent producer. It marks an event published only after Kafka acknowledges it, starts no new batch while one is in flight, and waits for in-flight deliveries on shutdown. This keeps memory bounded on the Pi.
+- **At-least-once delivery with deduplication.** Every event has a unique `event_id`, which is the outbox primary key and the Kafka message key. The idempotent producer suppresses its own retry duplicates. Others are possible, for example after a crash between Kafka's acknowledgment and the SQLite update, so consumers deduplicate on `event_id`.
 
-| Layer | Implemented | Planned |
+| Hop | Mechanism | Guarantee |
 | --- | --- | --- |
-| Devices | Python simulator | ESP32 Feather V2 with physical sensors |
-| Messaging | Mosquitto (MQTT QoS 1), Apache Kafka (single-node KRaft) | Dead-letter handling |
-| Storage | SQLite outbox, Redis with AOF persistence | Snowflake |
-| Processing | Python Kafka consumer (`confluent-kafka`) | dbt models. Flink only if justified |
-| Serving | FastAPI, Uvicorn, Caddy | |
-| Frontend | React, Vite, Netlify | Historical views |
-| Infrastructure | AWS EC2, Tailscale, Docker Compose, systemd | Terraform only if justified |
-| Testing | pytest, GitHub Actions | Integration and failure-recovery tests |
+| Simulator to Mosquitto | MQTT QoS 1 | At-least-once |
+| Mosquitto to SQLite | Persistent QoS 1 session, acknowledged after the commit | At-least-once. Repeats are dropped by primary key |
+| SQLite to Kafka | `acks=all`, idempotent producer | At-least-once |
+| Kafka to Redis | Offset committed after the Redis write | At-least-once with idempotent state |
+
+- **Decoupled, replayable consumers.** Kafka retains data for 7 days and each consumer group tracks its own offsets. A new group can replay from the earliest offset, and a historical consumer can be added without touching the live path. A tested Redis rebuild procedure is [TBD].
+
+### Serving
+
+- **Timestamp-safe latest state.** The consumer updates Redis with an atomic Lua script that ignores readings older than the stored one, so replays and out-of-order events cannot overwrite newer data. It commits the Kafka offset only after the Redis write.
+- **Read-only API on a derived view.** [`api/main.py`](api/main.py) reads only Redis, never Kafka. It uses `SCAN` with pipelined reads rather than `KEYS`, its `/health` endpoint checks Redis connectivity, and CORS allows only `GET` from configured origins.
+- **Freshness-aware dashboard.** The dashboard polls every 3 seconds, marks readings older than 30 seconds as stale, and keeps the last known values visible if the API is unreachable.
+
+### Operations
+
+- **Retention.** [`cleanup.py`](gateway/cleanup.py) runs hourly and deletes acknowledged events older than 24 hours in bounded batches, never pending ones, and supports `--dry-run`. Partial indexes on pending and published rows support these queries. The index migration is applied manually and there is no migration runner.
+- **Health monitoring.** [`health.py`](gateway/health.py) runs every minute against a read-only SQLite connection. It prints JSON with backlog size and age, ingestion and delivery freshness, database size, and disk use. Thresholds are configurable, and the exit code is 0, 1, or 2 for healthy, warning, or critical.
+- **Configuration as code.** [`infrastructure/`](infrastructure/) holds the systemd units and timers, Kafka KRaft, Mosquitto, and Caddy configuration, and two scripts. One validates unit files with `systemd-analyze verify` before installing. The other, `verify-deployment.sh`, makes read-only checks of services, containers, the Kafka topic, and the public endpoint.
+- **Containerized backend.** Docker Compose runs the consumer, Redis with AOF persistence, and the API. Images run as a non-root user with pinned dependencies, Redis health gates startup, and containers restart automatically. Redis is not published, and the API binds to loopback behind Caddy's HTTPS.
+- **Private networking and secrets.** The Kafka client listener binds to the broker's Tailscale address, MQTT requires authentication, and credentials live in a git-ignored `.env` and a password file outside the repo.
+- **Testing and CI.** 16 [pytest](tests/gateway) tests cover cleanup and health logic, and [GitHub Actions](.github/workflows/tests.yml) runs them on every push and pull request. Ingest, the producer, the consumer, and the API have no automated tests yet. [TBD]
+
+### Known limitations
+
+- Delivery is not exactly-once end to end.
+- Kafka is a single node with replication factor 1. It is not highly available and does not protect against broker storage loss.
+- Invalid MQTT events are dropped, not quarantined. Dead-letter handling is planned.
+- The Kafka producer and consumer use `PLAINTEXT` over Tailscale. MQTT on port 1883 is authenticated but not TLS-encrypted.
+- There is no external outage alerting.
 
 ## Data contract
 
@@ -113,6 +132,8 @@ Every message is one measurement, defined by the versioned JSON Schema [`schemas
 | `air_temperature` | `celsius` |
 | `relative_humidity` | `percent` |
 
+
+An example event:
 ```json
 {
   "schema_version": 1,
@@ -128,84 +149,7 @@ Every message is one measurement, defined by the versioned JSON Schema [`schemas
 
 ## Getting started
 
-A full deployment spans a Raspberry Pi, two EC2 instances, and Netlify, so it cannot be started with one command. [`infrastructure/README.md`](infrastructure/README.md) covers deployment, networking, and operations. This section covers the essentials for each role.
-
-**Prerequisites:** Python 3.11+, Docker with Compose for the backend, Node.js for the dashboard, Mosquitto on the Pi, and a reachable Kafka broker.
-
-| Role | Runs on | Dependencies |
-| --- | --- | --- |
-| Simulator | MacBook | [`requirements/simulator.txt`](requirements/simulator.txt) |
-| Gateway | Raspberry Pi | [`requirements/gateway.txt`](requirements/gateway.txt) |
-| Kafka | EC2 | [`infrastructure/kafka/greenhouse.properties.example`](infrastructure/kafka/greenhouse.properties.example) |
-| Live backend | EC2 | [`compose.yaml`](compose.yaml) |
-| Dashboard | Netlify | [`dashboard/package.json`](dashboard/package.json) |
-
-Copy [`.env.example`](.env.example) to `.env` and fill in the values for your role. The gateway treats a blank value as empty, not as a default.
-
-```bash
-# Simulator (MacBook): publishes about 3 events per second to the Pi's broker
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements/simulator.txt
-python3 sensor_simulator/simulate.py
-
-# Gateway (Raspberry Pi): install units, then enable the timers
-pip install -r requirements/gateway.txt
-sudo bash infrastructure/scripts/install-pi-services.sh
-sudo systemctl enable --now greenhouse-cleanup.timer greenhouse-health.timer
-bash infrastructure/scripts/verify-deployment.sh pi
-
-# Live backend (EC2): consumer, Redis, and API
-docker compose up -d --build
-curl --fail http://127.0.0.1:8000/health
-
-# Dashboard (local development)
-cd dashboard && npm install && npm run dev
-```
-
-The dashboard's API URL is hard-coded in [`App.jsx`](dashboard/src/App.jsx), so local development reads the production API. Making it configurable is [TBD].
-
-## Reliability and testing
-
-| Hop | Mechanism | Guarantee |
-| --- | --- | --- |
-| Simulator to Mosquitto | MQTT QoS 1 | At-least-once |
-| Mosquitto to SQLite | QoS 1 subscription, persistent session, manual acknowledgment after the SQLite commit | At-least-once. `event_id` is the primary key, so repeats are dropped |
-| SQLite to Kafka | `acks=all`, idempotent producer, no new batch while one is in flight | At-least-once. Marked published only after Kafka acknowledges |
-| Kafka to Redis | Offset committed after the Redis write, timestamp-guarded update | At-least-once with idempotent state |
-
-- **Outbox.** [`ingest.py`](gateway/ingest.py) writes with `synchronous=FULL`. [`kafka_producer.py`](gateway/kafka_producer.py) sends the oldest pending events in batches of 100. After a Kafka outage, pending events are retried.
-- **Duplicates.** The idempotent producer suppresses duplicates from its own retries. Other duplicates are possible, for example after a crash between Kafka's acknowledgment and the SQLite update. Consumers deduplicate on `event_id`.
-- **Retention.** [`cleanup.py`](gateway/cleanup.py) runs hourly and deletes acknowledged events older than 24 hours in bounded batches. It never deletes pending events. Kafka retains data for 7 days.
-- **Health checks.** [`health.py`](gateway/health.py) runs every minute and prints JSON with backlog size and age, ingestion and delivery freshness, database size, and disk use. It exits 0, 1, or 2 for healthy, warning, or critical.
-- **Tests.** 16 [pytest](tests/gateway) tests cover cleanup and health logic. [GitHub Actions](.github/workflows/tests.yml) runs them on every push and pull request. Ingest, the producer, the consumer, and the API have no automated tests yet. [TBD]
-
-**Limitations**
-- Delivery is not exactly-once end to end.
-- Kafka is a single node with replication factor 1. It is not highly available and does not protect against broker storage loss.
-- Invalid MQTT events are logged and dropped, not quarantined. Dead-letter handling is planned.
-- The Kafka producer and consumer use `PLAINTEXT` over Tailscale. MQTT on port 1883 is authenticated but not TLS-encrypted.
-- There is no external outage alerting.
-- Rebuilding Redis means replaying Kafka with a new consumer group. A tested procedure is [TBD].
-
-## Status and roadmap
-
-| Area | Status | Notes |
-| --- | --- | --- |
-| MQTT ingest, SQLite outbox, Kafka producer | Implemented | |
-| Kafka broker | Implemented | Single-node KRaft, topic `greenhouse.sensor-readings`, 1 partition, replication factor 1, 7-day retention |
-| Outbox retention and health checks | Implemented | systemd timers |
-| Live consumer, Redis, FastAPI, Caddy | Implemented | Docker Compose, HTTPS |
-| React dashboard | Implemented | Latest values with a 30-second stale indicator |
-| Infrastructure configs and verification script | Implemented | [`infrastructure/`](infrastructure/) |
-| Pi systemd units in the repo | In progress | Cleanup and health units are included. Ingest and producer units are being finalized |
-| SQLite index migration | In progress | [`002_outbox_indexes.sql`](gateway/migrations/002_outbox_indexes.sql) is applied manually. There is no migration runner |
-| Automated tests | In progress | Gateway only |
-| ESP32 sensors | Planned | [TBD] |
-| Snowflake ingestion, dbt models, historical views | Planned | [TBD] |
-| Dead-letter handling, replay and recovery procedures | Planned | |
-| Load test results, end-to-end latency | [TBD] | No measurements yet |
-| Screenshots or demo GIF | [TBD] | |
-| Flink, Terraform, expanded monitoring | Only if justified | |
+A full deployment spans a Raspberry Pi, two EC2 instances, and Netlify, so it cannot be started with one command. [`infrastructure/README.md`](infrastructure/README.md) covers deployment, networking, and operations, and will cover a full reproducibility guide in the near future.
 
 ## Repository structure
 

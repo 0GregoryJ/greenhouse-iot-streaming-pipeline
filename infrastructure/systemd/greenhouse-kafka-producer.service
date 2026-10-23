@@ -6,17 +6,25 @@ After=network-online.target tailscaled.service
 [Service]
 Type=simple
 
-# Allow for 60-second kafka delivery results window
-TimeoutStopSec=90
-
-# Run as an unprivileged user.
+# Run as an unprivileged user
 User=greenhousepi
 Group=greenhousepi
 
 WorkingDirectory=/home/greenhousepi/greenhouse-iot-streaming-pipeline
 
-# Read pending SQLite events and publish them to AWS Kafka.
-ExecStart=/home/greenhousepi/greenhouse-iot-streaming-pipeline/.venv/bin/python>
+# Read pending SQLite events and publish them to AWS Kafka
+ExecStart=/home/greenhousepi/greenhouse-iot-streaming-pipeline/.venv/bin/python -u /home/greenhousepi/greenhouse-iot-streaming-pipeline/gateway/kafka_producer.py
 
-# Restart after crashes or unexpected termination.
+# Allow in-flight Kafka deliveries to complete during shutdown
+TimeoutStopSec=90
+
+# Restart after crashes or unexpected termination
 Restart=on-failure
+RestartSec=5
+
+# Send logs to journald
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
