@@ -124,7 +124,7 @@ Configuration templates: [`.env.example`](.env.example), [`firmware/esp32/config
 
 ```text
 firmware/esp32/      MicroPython sensor firmware
-sensor_simulator/    Synthetic MQTT event generator (needs a fix)
+sensor_simulator/    Synthetic MQTT event generator
 gateway/             Raspberry Pi ingest, producer, cleanup, health, migrations
 schemas/             Versioned event schemas and examples
 consumers/live/      Kafka to Redis consumer

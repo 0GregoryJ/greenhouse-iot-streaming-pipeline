@@ -266,7 +266,15 @@ mpremote connect "$ESP32_PORT" repl            # Ctrl+] to exit
 
 ## Simulator
 
-`sensor_simulator/simulate.py` publishes synthetic schema v1 events from a Mac to the Pi's Mosquitto (three per second, using `MQTT_*` from `.env`; dependencies in `requirements/simulator.txt`). **It currently fails at startup** with `FileNotFoundError`, because it loads `schemas/sensor_event.schema.json`, which was renamed to `sensor_event.v1.schema.json`. The fix is a one-line path change in the simulator and is not part of this documentation work.
+`sensor_simulator/simulate.py` publishes synthetic schema v1 events from a Mac to the Pi's Mosquitto: three per second (soil moisture, air temperature, relative humidity), using `MQTT_HOST`, `MQTT_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD`, and `MQTT_TOPIC` from `.env`. Dependencies are in `requirements/simulator.txt`. It validates every event against `schemas/sensor_event.v1.schema.json` (with format checking) before publishing.
+
+```bash
+source .venv/bin/activate
+pip install -r requirements/simulator.txt
+python sensor_simulator/simulate.py      # Ctrl+C to stop
+```
+
+> **It writes to the live pipeline.** The simulator uses `gateway_id` `pi-001` and `sensor_id`s `bme280-001` and `soil-001`, the same as the physical sensors. Its events flow to SQLite, Kafka, and Redis, and because Redis keeps the newest timestamp per key, simulated values will replace real readings on the dashboard while it runs. Stop it when you are done. Simulated rows remain in Kafka for the retention period.
 
 ## systemd units
 
@@ -331,6 +339,5 @@ Issues found while writing these documents. None were changed, because this task
 6. **`.env.example` blanks** break the producer if copied verbatim (see Configuration).
 7. **Hard-coded dashboard API URL**, and Netlify settings not in the repo.
 8. **Verification scope.** `verify-deployment.sh` covers service and container state, not data flow. Its public URL is hard-coded.
-9. **Broken simulator** (see above).
-10. **Security posture.** MQTT is authenticated but unencrypted and has no ACLs. Kafka uses `PLAINTEXT` and relies on Tailscale. Kafka is a single broker with no replication. ESP32 credentials are plaintext on the device.
-11. **Manual provisioning.** EC2 instances, security groups, DNS, and Tailscale are configured by hand.
+9. **Security posture.** MQTT is authenticated but unencrypted and has no ACLs. Kafka uses `PLAINTEXT` and relies on Tailscale. Kafka is a single broker with no replication. ESP32 credentials are plaintext on the device.
+10. **Manual provisioning.** EC2 instances, security groups, DNS, and Tailscale are configured by hand.

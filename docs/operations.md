@@ -449,6 +449,7 @@ A card is stale when its event `timestamp` is more than 30 s old. The dashboard 
 | Only one sensor's cards are stale | That sensor or its driver. The ESP32 stops all sensors when any read raises, so a single failing sensor usually stalls everything |
 | A retired sensor's card persists as stale | Redis keys never expire. `redis-cli DEL <key>` |
 | API fresh, dashboard still stale | Browser cache or an old Netlify deploy |
+| Values look wrong or jump between two ranges | The [simulator](deployment.md#simulator) may be running. It uses the same `gateway_id` and `sensor_id`s as the real sensors, so the newest timestamp wins the Redis key. Stop it |
 
 ## Not available yet
 

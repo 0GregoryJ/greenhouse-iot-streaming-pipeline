@@ -11,7 +11,7 @@ flowchart TB
   subgraph edge["Edge (greenhouse LAN)"]
     bme["BME280<br/>I²C 0x77"] --> esp["ESP32 Feather V2<br/>MicroPython"]
     soil["STEMMA soil sensor<br/>I²C 0x36"] --> esp
-    sim["Simulator (Mac)<br/>v1 events, needs fix"]
+    sim["Simulator (Mac)<br/>v1 events"]
   end
 
   subgraph pi["Raspberry Pi Zero 2 W (systemd)"]
@@ -69,7 +69,7 @@ Solid boxes exist in the repository. Dashed boxes marked **Planned** do not. Dot
 | Component | Responsibility | Runs on | Status | Code |
 | --- | --- | --- | --- | --- |
 | ESP32 firmware | Read sensors, build schema v2 events (one per measurement), sync time via NTP, publish with MQTT QoS 1 | ESP32 Feather V2 (MicroPython) | Implemented. Unattended boot on external power is still being validated | [`firmware/esp32/`](../firmware/esp32/) |
-| Simulator | Generate synthetic schema v1 events (3 per second) | Mac | **Broken**: loads `schemas/sensor_event.schema.json`, which no longer exists | [`sensor_simulator/simulate.py`](../sensor_simulator/simulate.py) |
+| Simulator | Generate synthetic schema v1 events (3 per second) | Mac | Implemented. Validates against schema v1 and publishes with the same `sensor_id`s as the physical sensors (see [Deployment](deployment.md#simulator)) | [`sensor_simulator/simulate.py`](../sensor_simulator/simulate.py) |
 | Mosquitto | MQTT broker; authenticated, plain TCP on 1883, no ACLs | Pi | Implemented | [`infrastructure/mosquitto/greenhouse.conf`](../infrastructure/mosquitto/greenhouse.conf) |
 | Ingest | Subscribe, validate against v1/v2 schema, insert into SQLite, then acknowledge | Pi, systemd | Implemented | [`gateway/ingest.py`](../gateway/ingest.py) |
 | SQLite outbox | Durable buffer between MQTT and Kafka | Pi | Implemented | `gateway/data/sensor_events.db` (git-ignored) |

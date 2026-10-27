@@ -8,7 +8,7 @@ Related documents: [Architecture](architecture.md) · [Adding a sensor](adding-a
 
 | Version | Schema | Example | Emitted by | Accepted by gateway |
 | --- | --- | --- | --- | --- |
-| 1 | [`sensor_event.v1.schema.json`](../schemas/sensor_event.v1.schema.json) | [`sensor_event.v1.example.json`](../schemas/sensor_event.v1.example.json) | Simulator (currently broken, see [Architecture](architecture.md#components)) | Yes |
+| 1 | [`sensor_event.v1.schema.json`](../schemas/sensor_event.v1.schema.json) | [`sensor_event.v1.example.json`](../schemas/sensor_event.v1.example.json) | Simulator | Yes |
 | 2 | [`sensor_event.v2.schema.json`](../schemas/sensor_event.v2.schema.json) | [`sensor_event.v2.example.json`](../schemas/sensor_event.v2.example.json) | ESP32 firmware (`SCHEMA_VERSION = 2` in `main.py`) | Yes |
 
 Both are JSON Schema draft 2020-12. The gateway selects the schema from the event's `schema_version`; any other value is rejected as unsupported. v2 is a superset of v1: it adds `atmospheric_pressure` and `hpa`, and pins `atmospheric_pressure` to `hpa`. Validation is otherwise identical.
@@ -92,7 +92,7 @@ Trade-offs: more messages (48 per minute at a 5 s interval with the current sens
 | Stage | What is checked | Notes |
 | --- | --- | --- |
 | ESP32 (`main.py`) | Nothing against the schema | Builds events from constants and `float(value)`. Clock must be at least year 2025 |
-| Simulator | Full schema with `FormatChecker` | Broken at startup today |
+| Simulator | Schema v1 with `FormatChecker` | Stops on any invalid event it generates |
 | Mosquitto | Authentication only | No payload validation, no topic ACLs in the repo config |
 | **Gateway ingest** | Full JSON Schema by `schema_version`, **without** a format checker | The authoritative gate. `uuid` and `date-time` formats are **not** enforced here: a non-UUID `event_id` or a naive timestamp passes |
 | Kafka producer | Nothing | Forwards the stored JSON unchanged |
@@ -152,7 +152,7 @@ Rules for a new version:
 | `schemas/` | Schema, example, `$schema` valid | Always |
 | [`gateway/ingest.py`](../gateway/ingest.py) | Version registered in `SCHEMAS`; service restarted | New version |
 | Firmware [`main.py`](../firmware/esp32/main.py), [`sensors.py`](../firmware/esp32/sensors.py) | `SCHEMA_VERSION`, event fields, measurement types, units | Producer-side change |
-| Simulator | Currently pinned to v1 and a missing schema path | If the simulator should emit the new shape |
+| Simulator | Pinned to v1 (`schema_version: 1`, `schemas/sensor_event.v1.schema.json`) | If the simulator should emit the new shape |
 | SQLite outbox | Stores the event as a JSON string. No column change | Never for content changes. Only if outbox columns change |
 | [`gateway/kafka_producer.py`](../gateway/kafka_producer.py) | Forwards JSON unchanged | Never for content changes |
 | Kafka topic | No registry; key is `event_id` | Only if key or topic design changes |
