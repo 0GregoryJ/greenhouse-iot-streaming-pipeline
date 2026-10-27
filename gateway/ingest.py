@@ -28,8 +28,8 @@ load_dotenv(ROOT / ".env")
 MQTT_TOPIC = "greenhouse/telemetry"
 
 SCHEMAS = {
-        1: open(ROOT / "schemas" / "sensor_event.v1.schema.json"),
-        2: open(ROOT / "schemas" / "sensor_event.v2.schema.json")
+        1: json.load(open(ROOT / "schemas" / "sensor_event.v1.schema.json")),
+        2: json.load(open(ROOT / "schemas" / "sensor_event.v2.schema.json"))
     }    
 
 
