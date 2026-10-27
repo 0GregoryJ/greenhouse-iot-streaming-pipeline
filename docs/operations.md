@@ -38,7 +38,7 @@ Placeholders in angle brackets, such as `<TAILSCALE_IP>`, are values from your e
 
 | Component | Command | Notes |
 | --- | --- | --- |
-| Ingest | `sudo journalctl -u greenhouse-ingest -f` | Written with `print()`. If the deployed unit does not run Python with `-u`, lines can be delayed; check `systemctl cat greenhouse-ingest` |
+| Ingest | `sudo journalctl -u greenhouse-ingest -f` | Written with `print()`. The repo unit runs Python with `-u`; if the deployed unit does not, lines can be delayed, so check `systemctl cat greenhouse-ingest` |
 | Producer | `sudo journalctl -u greenhouse-kafka-producer -f` | Timestamped logging; the unit uses `python -u` |
 | Cleanup | `sudo journalctl -u greenhouse-cleanup.service -n 20 --no-pager` | One run per hour |
 | Health | `sudo journalctl -u greenhouse-health.service --since "3 minutes ago" -o cat` | JSON output once per minute |

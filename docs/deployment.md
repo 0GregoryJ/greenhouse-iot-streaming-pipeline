@@ -50,7 +50,7 @@ No secret values are committed. `.env` and `firmware/esp32/config.py` are git-ig
 Notes:
 
 - `ingest.py` reads only `MQTT_USERNAME` and `MQTT_PASSWORD`. It connects to `localhost:1883` and topic `greenhouse/telemetry`, both hard-coded; `MQTT_HOST`, `MQTT_PORT`, and `MQTT_TOPIC` are for the simulator.
-- Every variable in `.env.example` is blank. A blank value is still "set", so `KAFKA_TOPIC=` makes the producer publish to topic `""`, and `KAFKA_BATCH_SIZE=` fails integer parsing. Fill in each value you keep or delete the line.
+- `.env.example` pre-fills the application defaults (topic, consumer group, batch size, retry interval, CORS origin, MQTT topic). Credentials, `MQTT_HOST`, and `KAFKA_BOOTSTRAP_SERVERS` are blank and must be filled in. A blank value is still "set": `KAFKA_TOPIC=` would make the producer publish to topic `""`, and `KAFKA_BATCH_SIZE=` fails integer parsing. Delete a line rather than leaving it empty.
 - `.env` is read when a process starts. After editing it, restart the service (`systemctl restart …`) or recreate containers (`sudo docker compose up -d`).
 - The repository does not configure Mosquitto ACLs, so any authenticated MQTT user can publish and subscribe to any topic. Use a separate account per device and keep MQTT on trusted networks (port 1883 is not TLS).
 - Restricting `.env` to the service user (`chmod 600 .env`) is sensible hygiene; nothing in the repo does it.
@@ -70,18 +70,18 @@ cd greenhouse-iot-streaming-pipeline
 python3 -m venv .venv
 .venv/bin/pip install -r requirements/gateway.txt
 
-cp .env.example .env            # then fill in every value you keep
+cp .env.example .env            # then fill in the blank values
 
 sudo cp infrastructure/mosquitto/greenhouse.conf /etc/mosquitto/conf.d/greenhouse.conf
 sudo mosquitto_passwd -c /etc/mosquitto/passwd <mqtt-user>   # -c creates the file; omit it to add more users
 sudo systemctl restart mosquitto
 ```
 
-Then create the SQLite database by starting ingest (it creates `gateway/data/sensor_events.db` and the table) and apply the index migration (see below). Install the unit files after reading the warning in the next section.
+Then create the SQLite database by starting ingest (it creates `gateway/data/sensor_events.db` and the table) and apply the index migration (see below). Then install the unit files (next section).
 
 ### Installing systemd units
 
-> **Check the ingest unit first.** [`infrastructure/systemd/greenhouse-ingest.service`](../infrastructure/systemd/greenhouse-ingest.service) in this repository is incomplete: its `ExecStart` ends at `.venv/bin/python>` with no script argument, and it has no `[Install]` section. Running the install script copies it over `/etc/systemd/system/greenhouse-ingest.service`. Compare with the deployed unit first (`systemctl cat greenhouse-ingest.service`) and fix the repo copy before installing. The intended form likely mirrors the producer unit (`python -u …/gateway/ingest.py` plus `WantedBy=multi-user.target`), but confirm against the working unit on the Pi.
+> **Compare before installing.** The install script overwrites the installed units in `/etc/systemd/system/`. If a Pi already runs a unit that differs from the repository copy (for example `systemctl cat greenhouse-ingest.service`), review the difference first.
 
 ```bash
 sudo bash infrastructure/scripts/install-pi-services.sh
@@ -92,8 +92,8 @@ The script requires root and the `greenhousepi` user, runs `systemd-analyze veri
 ```bash
 sudo systemctl enable --now greenhouse-cleanup.timer
 sudo systemctl enable --now greenhouse-health.timer
-sudo systemctl enable --now greenhouse-kafka-producer.service   # has an [Install] section
-# greenhouse-ingest.service: enable once its unit has an [Install] section
+sudo systemctl enable --now greenhouse-ingest.service
+sudo systemctl enable --now greenhouse-kafka-producer.service
 ```
 
 ### Database migration
@@ -281,7 +281,7 @@ python sensor_simulator/simulate.py      # Ctrl+C to stop
 | Unit | Host | Purpose |
 | --- | --- | --- |
 | `mosquitto.service` | Pi | MQTT broker |
-| `greenhouse-ingest.service` | Pi | MQTT to SQLite (see the repo-unit warning above) |
+| `greenhouse-ingest.service` | Pi | MQTT to SQLite |
 | `greenhouse-kafka-producer.service` | Pi | SQLite to Kafka |
 | `greenhouse-cleanup.service`, `greenhouse-cleanup.timer` | Pi | Hourly retention cleanup |
 | `greenhouse-health.service`, `greenhouse-health.timer` | Pi | Health check every minute |
@@ -329,15 +329,11 @@ Do not remove support for an old schema version until no device emits it and que
 
 ## Known limitations and repository discrepancies
 
-Issues found while writing these documents. None were changed, because this task did not modify behavior.
+Open issues and gaps in the current repository.
 
-1. **Truncated ingest unit.** `greenhouse-ingest.service` in the repo is incomplete (see above). Verify what is deployed on the Pi.
-2. **File name casing.** `compose.yaml` references `consumers/live/Dockerfile` and `api/Dockerfile`, but the tracked files are `dockerfile` (lowercase). The infrastructure README refers to `caddy/Caddyfile`, but the file is `infrastructure/caddy/caddyfile`. macOS's case-insensitive filesystem hides this. How the live EC2 host builds could not be confirmed. On a case-sensitive Linux filesystem, a mismatch can break `docker compose build`. Renaming with `git mv` is a possible fix.
-3. **Infrastructure README layout.** It lists `systemd/greenhouse-kafka.service`, which does not exist, and calls the scripts directory `scripts/` (actual: `infrastructure/scripts/`). It calls itself a "target layout".
-4. **Unversioned Kafka host setup.** Kafka service unit, KRaft formatting, topic creation, and Tailscale setup are not in the repo.
-5. **No migration runner.** Applied by hand; see above.
-6. **`.env.example` blanks** break the producer if copied verbatim (see Configuration).
-7. **Hard-coded dashboard API URL**, and Netlify settings not in the repo.
-8. **Verification scope.** `verify-deployment.sh` covers service and container state, not data flow. Its public URL is hard-coded.
-9. **Security posture.** MQTT is authenticated but unencrypted and has no ACLs. Kafka uses `PLAINTEXT` and relies on Tailscale. Kafka is a single broker with no replication. ESP32 credentials are plaintext on the device.
-10. **Manual provisioning.** EC2 instances, security groups, DNS, and Tailscale are configured by hand.
+1. **Unversioned Kafka host setup.** Kafka service unit, KRaft formatting, topic creation, and Tailscale setup are not in the repo.
+2. **No migration runner.** Applied by hand; see above.
+3. **Hard-coded dashboard API URL**, and Netlify settings not in the repo.
+4. **Verification scope.** `verify-deployment.sh` covers service and container state, not data flow. Its public URL is hard-coded.
+5. **Security posture.** MQTT is authenticated but unencrypted and has no ACLs. Kafka uses `PLAINTEXT` and relies on Tailscale. Kafka is a single broker with no replication. ESP32 credentials are plaintext on the device.
+6. **Manual provisioning.** EC2 instances, security groups, DNS, and Tailscale are configured by hand.

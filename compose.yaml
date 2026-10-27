@@ -17,7 +17,7 @@ services:
   live-consumer:
     build:
       context: .
-      dockerfile: consumers/live/Dockerfile
+      dockerfile: consumers/live/dockerfile
 
     restart: unless-stopped
 
@@ -34,7 +34,7 @@ services:
   api:
     build:
       context: .
-      dockerfile: api/Dockerfile
+      dockerfile: api/dockerfile
 
     restart: unless-stopped
 

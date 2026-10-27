@@ -6,6 +6,8 @@ The project uses a Raspberry Pi Zero 2 W as an edge gateway, two AWS EC2 instanc
 
 Infrastructure configuration is version-controlled to support reproducible deployments, consistent service management, and easier troubleshooting.
 
+For the complete deployment procedure, rollback, and known limitations, see [`docs/deployment.md`](../docs/deployment.md). For monitoring and troubleshooting, see [`docs/operations.md`](../docs/operations.md).
+
 ## Architecture
 
 ```text
@@ -55,7 +57,7 @@ The Raspberry Pi provides durable local event buffering, Kafka decouples event p
 ```text
 infrastructure/
 ├── caddy/
-│   └── Caddyfile
+│   └── caddyfile
 ├── kafka/
 │   └── greenhouse.properties.example
 ├── mosquitto/
@@ -66,15 +68,16 @@ infrastructure/
 │   ├── greenhouse-cleanup.service
 │   ├── greenhouse-cleanup.timer
 │   ├── greenhouse-health.service
-│   ├── greenhouse-health.timer
-│   └── greenhouse-kafka.service
+│   └── greenhouse-health.timer
 ├── scripts/
 │   ├── install-pi-services.sh
 │   └── verify-deployment.sh
 └── README.md
 ```
 
-This is the target infrastructure layout. Each configuration should reflect a verified deployment, and scripts should be tested on their intended hosts.
+This is the current contents of `infrastructure/`. Each configuration should reflect a verified deployment, and scripts should be tested on their intended hosts.
+
+The Kafka broker's systemd unit (`kafka.service`) is not versioned in this repository; only the broker configuration template is. Caddy's template is named `caddyfile` here and is deployed as `/etc/caddy/Caddyfile`.
 
 ## Deployment Environments
 
@@ -129,12 +132,16 @@ The script validates and installs the Pi systemd unit files, then reloads system
 
 It does not automatically restart or enable running services.
 
-Enable timers:
+Enable timers and services:
 
 ```bash
 sudo systemctl enable --now greenhouse-cleanup.timer
 sudo systemctl enable --now greenhouse-health.timer
+sudo systemctl enable --now greenhouse-ingest.service
+sudo systemctl enable --now greenhouse-kafka-producer.service
 ```
+
+The install script overwrites the installed unit files. If a Pi already runs a unit that differs from the repository copy, compare `systemctl cat greenhouse-ingest.service` with the repository version before installing.
 
 Restart gateway applications when appropriate:
 
@@ -265,9 +272,9 @@ FastAPI is bound to the EC2 instance's loopback interface.
 
 Caddy runs directly on EC2 #2 as a systemd-managed reverse proxy.
 
-Repository configuration:
+Repository template (contains a placeholder hostname):
 
-`caddy/Caddyfile`
+`caddy/caddyfile`
 
 Deployed configuration:
 
@@ -296,7 +303,7 @@ The React dashboard is hosted separately through Netlify.
 
 ## 5. Deployment Scripts
 
-Deployment utilities are stored in `scripts/`.
+Deployment utilities are stored in `infrastructure/scripts/`.
 
 ### `install-pi-services.sh`
 
@@ -407,11 +414,11 @@ Infrastructure and application changes follow this process:
 3. Push to GitHub.
 4. Verify GitHub Actions CI results.
 5. Review and merge changes.
-6. Deploy the tested revision to the target environment.
+6. Manually deploy the tested revision to the target environment (pull the revision on the host, then restart services or rebuild containers; see [`docs/deployment.md`](../docs/deployment.md)).
 7. Run the corresponding deployment verification script.
 8. Confirm service health and data freshness.
 
-The repository's automated tests are maintained in `tests/`, with GitHub Actions workflows under `.github/workflows/`.
+The repository's automated tests are maintained in `tests/`, with GitHub Actions workflows under `.github/workflows/`. The workflow currently runs tests only; build and deployment steps are manual.
 
 ## 9. Known Limitations and Future Improvements
 
@@ -426,6 +433,6 @@ Current limitations include:
 - No automated infrastructure provisioning.
 - Redis recovery procedures requiring additional validation.
 
-Planned improvements include expanded integration testing, automated deployment verification, centralized observability, and potentially Terraform-based infrastructure provisioning.
+Planned improvements include expanded integration testing, CI/CD that builds, validates, and deploys with rollback (today `verify-deployment.sh` is run by hand), centralized observability, and potentially Terraform-based infrastructure provisioning.
 
 The objective is to demonstrate reliable event processing, clear service boundaries, durable buffering, reproducible configuration, and operational engineering practices.

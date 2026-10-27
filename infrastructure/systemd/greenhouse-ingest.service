@@ -15,8 +15,11 @@ Group=greenhousepi
 WorkingDirectory=/home/greenhousepi/greenhouse-iot-streaming-pipeline
 
 # Use the project's Python virtual environment.
-ExecStart=/home/greenhousepi/greenhouse-iot-streaming-pipeline/.venv/bin/python>
+ExecStart=/home/greenhousepi/greenhouse-iot-streaming-pipeline/.venv/bin/python -u gateway/ingest.py
 
 # Automatically recover from unexpected process termination.
 Restart=on-failure
 RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
