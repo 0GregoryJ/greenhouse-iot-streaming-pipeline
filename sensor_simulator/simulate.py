@@ -29,7 +29,7 @@ MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
 MQTT_TOPIC = os.getenv("MQTT_TOPIC")
 
 # Load JSON Schema
-SCHEMA_PATH = ROOT / "schemas" / "sensor_event.schema.json"
+SCHEMA_PATH = ROOT / "schemas" / "sensor_event.v1.schema.json"
 
 with open(SCHEMA_PATH) as f:
     schema = json.load(f)
