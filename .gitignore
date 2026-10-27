@@ -6,3 +6,4 @@ gateway/data/
 **/__pycache__
 node_modules/
 .pytest_cache
+firmware/esp32/config.py

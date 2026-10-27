@@ -153,13 +153,13 @@ def main():
     # Timestamp of the next sampling cycle.
     next_sample = time.ticks_ms()
 
+    wlan = connect_wifi()
+
     while True:
         try:
             # 1. Connect or reconnect Wi-Fi.
-            wlan = connect_wifi()
-
             if not wlan.isconnected():
-                raise RuntimeError("Wi-Fi unavailable")
+                wlan = connect_wifi()
 
             # 2. Synchronize UTC on startup and periodically.
             now_ms = time.ticks_ms()
