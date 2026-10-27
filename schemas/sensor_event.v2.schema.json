@@ -1,0 +1,44 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Greenhouse Sensor Event",
+    "description": "Schema for individual greenhouse sensor measurements.",
+    "type": "object",
+    "properties": 
+    {
+      "schema_version": {
+        "type": "integer",
+        "const": 2
+      },
+      "measurement_type": {
+        "type": "string",
+        "enum": [
+          "soil_moisture",
+          "soil_temperature",
+          "air_temperature",
+          "relative_humidity",
+          "atmospheric_pressure"
+        ]
+      },
+      "unit": {
+        "type": "string",
+        "enum": [
+          "raw_capacitance",
+          "celsius",
+          "percent",
+          "hpa"
+        ]
+      }
+    },
+    "required": [
+      "schema_version",
+      "event_id",
+      "sensor_id",
+      "gateway_id",
+      "timestamp",
+      "measurement_type",
+      "value",
+      "unit"
+    ],
+    "additionalProperties": false
+  }
+  

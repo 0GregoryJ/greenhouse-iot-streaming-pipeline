@@ -1,0 +1,10 @@
+{
+    "schema_version": 2,
+    "event_id": "550e8400-e29b-41d4-a716-446655440003",
+    "sensor_id": "bme280-001",
+    "gateway_id": "pi-001",
+    "timestamp": "2026-10-27T05:30:00Z",
+    "measurement_type": "atmospheric_pressure",
+    "value": 1013.2,
+    "unit": "hpa"
+  }

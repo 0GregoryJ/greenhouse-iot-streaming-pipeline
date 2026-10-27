@@ -17,7 +17,7 @@ from pathlib import Path
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
-from jsonschema import Draft202012Validator, FormatChecker, ValidationError
+from jsonschema import ValidationError, validate
 
 # Configuration
 ROOT = Path(__file__).resolve().parent.parent
@@ -27,14 +27,11 @@ load_dotenv(ROOT / ".env")
 
 MQTT_TOPIC = "greenhouse/telemetry"
 
+SCHEMAS = {
+        1: open(ROOT / "schemas" / "sensor_event.v1.schema.json"),
+        2: open(ROOT / "schemas" / "sensor_event.v2.schema.json")
+    }    
 
-with open(ROOT / "schemas" / "sensor_event.schema.json") as f:
-    schema = json.load(f)
-
-validator = Draft202012Validator(
-    schema,
-    format_checker=FormatChecker()
-)
 
 # Creates SQLite database and table.
 def initialize_database():
@@ -61,13 +58,27 @@ def on_connect(client, userdata, flags, reason_code, properties):
     client.subscribe(MQTT_TOPIC, qos=1)
     print(f"Subscribed to {MQTT_TOPIC}")
 
+# Validates events.
+def validate_event(event):
+    version = event.get("schema_version")
+
+    if version not in SCHEMAS:
+        raise ValueError(
+            f"Unsupported schema version: {version}"
+        )
+
+    validate(
+        instance=event,
+        schema=SCHEMAS[version],
+    )
+
 # Decodes JSON, validates against schema, inserts into SQLite table. Runs when Mosquitto delivers an event.
 def on_message(client, userdata, message):
     """Persist a measurement before acknowledging MQTT delivery."""
 
     try:
         event = json.loads(message.payload.decode("utf-8"))
-        validator.validate(event)
+        validate_event(event)
 
     except (ValueError, ValidationError) as error:
         # Invalid messages cannot enter the outbox.
