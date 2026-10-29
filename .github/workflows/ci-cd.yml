@@ -215,8 +215,26 @@ jobs:
 
           docker compose ps
 
-          curl --fail --retry 5 --retry-delay 2 \
-            http://127.0.0.1:8000/health
+          echo "Waiting for API to become ready..."
+
+          for attempt in $(seq 1 20); do
+              if curl --silent --show-error --fail \
+                  --max-time 3 \
+                  http://127.0.0.1:8000/health; then
+
+                  echo
+                  echo "API is healthy"
+                  break
+              fi
+
+              if [ "$attempt" -eq 20 ]; then
+                  echo "API failed health check"
+                  docker compose logs --tail=100 api
+                  exit 1
+              fi
+
+              sleep 3
+          done
 
           echo "Serving deployment successful"
           REMOTE
