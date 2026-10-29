@@ -1,6 +1,6 @@
 # Operations
 
-How to check, troubleshoot, and maintain the running pipeline, using only the logging and tooling that exists today. Missing capabilities are marked **Planned**.
+How to check, troubleshoot, and maintain the running pipeline.
 
 Related documents: [Architecture](architecture.md) · [Data contracts](data-contracts.md) · [Deployment](deployment.md) · [Adding a sensor](adding-a-sensor.md)
 
@@ -13,13 +13,13 @@ Related documents: [Architecture](architecture.md) · [Data contracts](data-cont
 | Serving EC2 (#2) | The repository root (where `compose.yaml` and `.env` are) | Docker commands use `sudo` |
 | Mac | Repository root, `.venv` activated | ESP32 serial access via `mpremote` |
 
-Placeholders in angle brackets, such as `<TAILSCALE_IP>`, are values from your environment. Do not paste real credentials into shared notes. Several commands load `.env` with `set -a; source .env; set +a`; note that `-P "$MQTT_PASSWORD"` is visible in the process list while the command runs.
+Placeholders in angle brackets, such as `<TAILSCALE_IP>`, are values from your environment. Several commands load `.env` with `set -a; source .env; set +a`.
 
 ## Health at a glance
 
 | Component | Check | Healthy |
 | --- | --- | --- |
-| ESP32 | `mpremote connect "$ESP32_PORT" repl` | Repeating `Published: <sensor> <type> <value> <unit>` lines |
+| ESP32 | `mpremote connect "$ESP32_PORT" repl` | `BME280 initialized`, `Soil sensor initialized`, then repeating `Published: <sensor> <type> <value> <unit>` lines |
 | Mosquitto | `systemctl status mosquitto` and [`mosquitto_sub`](#mqtt) | Active; events stream |
 | Ingest | `systemctl status greenhouse-ingest`, journal | Active; `Saved:` lines; no restarts |
 | SQLite outbox | [Queries](#sqlite) | `latest_received` within seconds; `pending` near 0 |
@@ -32,17 +32,17 @@ Placeholders in angle brackets, such as `<TAILSCALE_IP>`, are values from your e
 | Public API | `curl -s https://api.gregoryjoshua.com/health` | `{"status":"ok"}` |
 | Dashboard | Browser | "Live" status pill, readings under 30 s old |
 
-[`infrastructure/scripts/verify-deployment.sh`](../infrastructure/scripts/verify-deployment.sh) runs service, container, health-endpoint, and gateway-health checks per host (`pi`, `kafka`, `backend`). It is read-only, does not check data flow, and exits non-zero on failure. See [Deployment](deployment.md#verification).
+[`infrastructure/scripts/verify-deployment.sh`](../infrastructure/scripts/verify-deployment.sh) runs service, container, health-endpoint, and gateway-health checks per host (`pi`, `kafka`, `backend`). It is read-only and exits non-zero on failure. Data flow is checked with the [troubleshooting flow](#troubleshooting-flow). See [Deployment](deployment.md#verification).
 
 ## Logs
 
 | Component | Command | Notes |
 | --- | --- | --- |
-| Ingest | `sudo journalctl -u greenhouse-ingest -f` | Written with `print()`. The repo unit runs Python with `-u`; if the deployed unit does not, lines can be delayed, so check `systemctl cat greenhouse-ingest` |
+| Ingest | `sudo journalctl -u greenhouse-ingest -f` | Written with `print()`; the unit runs Python unbuffered (`-u`) |
 | Producer | `sudo journalctl -u greenhouse-kafka-producer -f` | Timestamped logging; the unit uses `python -u` |
 | Cleanup | `sudo journalctl -u greenhouse-cleanup.service -n 20 --no-pager` | One run per hour |
 | Health | `sudo journalctl -u greenhouse-health.service --since "3 minutes ago" -o cat` | JSON output once per minute |
-| Mosquitto | `sudo journalctl -u mosquitto -n 50 --no-pager` | Depending on the Pi's Mosquitto setup, logs may instead be in `/var/log/mosquitto/`. Logging is not configured by this repo |
+| Mosquitto | `sudo journalctl -u mosquitto -n 50 --no-pager` | Or `/var/log/mosquitto/`, depending on the Pi's Mosquitto setup |
 | Kafka | `sudo journalctl -u kafka -n 100 --no-pager` | On EC2 #1 |
 | Consumer | `sudo docker compose logs -f live-consumer` | |
 | API | `sudo docker compose logs -f api` | |
@@ -53,6 +53,11 @@ Messages worth knowing:
 
 | Source | Message | Meaning |
 | --- | --- | --- |
+| ESP32 | `BME280 initialized`, `Soil sensor initialized` | Sensor ready (logged at boot and after each recovery) |
+| ESP32 | `<sensor> initialization failed: <reason>` | Sensor not detected or init error; retried every 30 s while other sensors keep publishing |
+| ESP32 | `BME280 read failed: …`, `Soil sensor read failed: …` | Read error; the sensor is marked unavailable and re-initialized within 30 s |
+| ESP32 | `NTP synchronization failed: <reason>` | Clock sync failed; publishing continues if the clock was already set, otherwise the network retry path runs |
+| ESP32 | `Telemetry error: <reason>` followed by `Network retry in 5 seconds` | Wi-Fi, NTP, or MQTT failure; reconnects without restarting the program |
 | Ingest | `Subscribed to greenhouse/telemetry` | Connected |
 | Ingest | `Saved: <type> = <value>` | Committed to SQLite and acknowledged |
 | Ingest | `Duplicate ignored: <event_id>` | Redelivery or retry, already stored |
@@ -135,7 +140,7 @@ sqlite3 -readonly -header -column "$DB" \
    FROM sensor_events WHERE kafka_published_at IS NULL GROUP BY 1;"
 ```
 
-At the current 5 s interval and four measurements, expect about 48 rows per minute. The path is derived from the script location, so make sure you are querying the repository that the services actually run from. Pending rows are the only copy of an event until Kafka acknowledges it, so do not delete them to "clear" a backlog unless you accept the data loss.
+At the 5 s interval with four measurements, expect about 48 rows per minute. The database path is derived from the script location, so query the repository that the services run from. Pending rows are the only copy of an event until Kafka acknowledges it.
 
 ## Kafka
 
@@ -231,7 +236,7 @@ It reports `total_events`, `pending_events`, oldest pending age, latest received
 
 Exit codes are 0 healthy, 1 warning, 2 critical. The service treats exit 1 as success, so warnings do not fail the unit, but a critical (exit 2) marks `greenhouse-health.service` failed. Check with `systemctl is-failed greenhouse-health.service`.
 
-Limits: it sees only the Pi's outbox. A stale-ingestion warning looks the same whether the ESP32 is off or ingest is broken. It does not check Kafka, the consumer, Redis, the API, or the ESP32, and it sends no notifications. **Planned**: external outage alerting and checks for the downstream components.
+The check reads the Pi's outbox. A stale-ingestion warning covers both the ESP32 and ingest, so use stages 1 and 2 of the [troubleshooting flow](#troubleshooting-flow) to tell them apart. Downstream stages are checked with the commands in the Kafka and Redis sections.
 
 ## Cleanup and retention
 
@@ -282,7 +287,7 @@ systemctl status mosquitto greenhouse-ingest greenhouse-kafka-producer --no-page
 A `Published:` line is printed only after the broker's PUBACK, so if the ESP32 prints it, Mosquitto has the message. Work out which side is wrong.
 
 1. Read the device output (`mpremote connect "$ESP32_PORT" repl`). Healthy startup: `Wi-Fi connected`, `UTC synchronized`, `Connected to MQTT`, then `Published:` lines.
-2. If it prints `Telemetry error: …` and `Retrying in 5 seconds`, that is the cause:
+2. If it prints `Telemetry error: …` and `Network retry in 5 seconds`, that is the cause:
 
    | Output | Likely cause |
    | --- | --- |
@@ -290,12 +295,13 @@ A `Published:` line is printed only after the broker's PUBACK, so if the ESP32 p
    | `Clock is not synchronized` or an NTP error | No internet for NTP |
    | `OSError` on connect | Wrong `MQTT_HOST` (must be the Pi's LAN address), broker down, or firewall |
    | `MQTTException: 5` | Credentials rejected |
-   | `RuntimeError: … not detected` before the loop starts | Sensor wiring. The program exits to the REPL and does not retry. Reset after fixing |
 
 3. If `Published:` lines appear but `mosquitto_sub` is silent, the subscriber is the problem: check the topic (`greenhouse/telemetry`), the credentials in `.env`, and that the ESP32's `MQTT_HOST` points at this Pi.
 4. Check the broker: `systemctl status mosquitto`, the `$SYS` client count, and the broker log.
 
-The ESP32 holds at most one cycle of events and does not sample while disconnected, so readings missed during an outage cannot be recovered.
+While disconnected, the ESP32 holds the current cycle's events in RAM and resumes sampling after it reconnects.
+
+If some sensors are missing from the stream, check the REPL for `<sensor> initialization failed: …` (for example `BME280 not detected` or `Soil sensor not detected`) or `<sensor> read failed: …`. Check wiring and the I²C scan (see [Adding a sensor](adding-a-sensor.md#2-prove-the-sensor-on-the-bench)). The other sensors keep publishing, and the failed one is re-initialized every 30 s and logs `<sensor> initialized` when it recovers.
 
 ### 2. MQTT receives but SQLite is empty
 
@@ -311,9 +317,9 @@ sudo journalctl -u greenhouse-ingest -n 100 --no-pager
 | `Connection failed: …` | Wrong `MQTT_USERNAME`/`MQTT_PASSWORD` in `.env` |
 | `Invalid event: …`, no `Saved:` | Validation failure, see [below](#schema-validation-failures) |
 | Restarts climbing, `SQLite persistence failed` | Permissions on `gateway/data/`, full disk, or a corrupted database. Check `df -h` and file ownership |
-| Rapid restarts with an `AttributeError` or `TypeError` traceback | See [Poison message restart loop](#poison-message-restart-loop) |
+| Rapid restarts with a Python traceback | Read the first traceback in the journal; the message that triggered it was not acknowledged |
 | `Saved:` lines present but your query is empty | You queried a different repository clone or database path |
-| Inactive for a while, now recovered | Mosquitto queued messages for the persistent session; rows appear after the restart (Mosquitto's queue limits apply and are not set in this repo) |
+| Inactive for a while, now recovered | Mosquitto queued messages for the persistent session; rows appear after the restart |
 
 ### 3. SQLite has rows but Kafka is empty
 
@@ -354,7 +360,7 @@ sudo docker compose logs --tail 100 live-consumer
 
 Check lag with `kafka-consumer-groups.sh` (above). Lag near 0 and rising offsets mean the consumer is keeping up.
 
-**Redis recovery.** Redis is a derived view. The mechanism is to start a consumer with a new `KAFKA_CONSUMER_GROUP` (set in `.env`; `auto.offset.reset=earliest` replays the retained 168 h) or to reset the group's offsets. This is untested end to end (**TBD**), so treat it as an outline.
+**Redis recovery.** Redis is a derived view. Start a consumer with a new `KAFKA_CONSUMER_GROUP` (set in `.env`, then `sudo docker compose up -d`); `auto.offset.reset=earliest` replays the retained 168 h. Alternatively, reset the group's offsets with `kafka-consumer-groups.sh --reset-offsets`.
 
 ### 5. Redis has data but the API or dashboard is empty or stale
 
@@ -372,7 +378,7 @@ curl -s https://api.gregoryjoshua.com/health
 | Dashboard shows "No data" | `/api/v1/sensors/latest` returns `count: 0`: Redis empty, go back to stage 4 |
 | Dashboard shows "Stale" or grey cards | See [Stale dashboard readings](#stale-dashboard-readings) |
 
-The dashboard has the API URL hard-coded in `App.jsx`. It keeps the last known values when a fetch fails, so an old display does not by itself prove the API is up.
+The dashboard keeps the last known values when a fetch fails, so check the status pill and reading ages, not only the numbers.
 
 ## Failure scenarios
 
@@ -394,19 +400,13 @@ sudo journalctl -u greenhouse-ingest --since "1 hour ago" --no-pager | grep "Inv
 | `... is not of type 'number'` | `value` is a string or boolean |
 | `Expecting value` and similar | Payload is not JSON |
 
-The journal records the error, not the payload. Capture an offending message with `mosquitto_sub -C` ([MQTT](#mqtt)) and validate it as in [Data contracts](data-contracts.md#testing-a-schema-change-before-deployment). The usual cause is a firmware change deployed before the gateway ([Deployment](deployment.md#coordinated-changes-and-schema-migrations)). Rejected events were acknowledged and are gone; there is no rejected-event store (**Planned**).
-
-### Poison message restart loop
-
-Observed from code, not reproduced. A payload that is valid JSON but not an object, or a `schema_version` that is not a plain scalar, raises an exception that `ingest.py` does not catch. paho re-raises it, the process exits, and systemd restarts it after 5 s. The message was not acknowledged, so the persistent session can redeliver it, repeating the cycle.
-
-Signs: `NRestarts` increasing every few seconds and an `AttributeError`/`TypeError` traceback in the journal. Last-resort mitigation, also untested: stop ingest, then connect once with the same client ID and a clean session to discard the stored session, for example `mosquitto_sub -h localhost -u "$MQTT_USERNAME" -P "$MQTT_PASSWORD" -i pi-sqlite-ingestor -t greenhouse/telemetry -C 1 -W 1`. This discards every message queued for the ingestor, valid ones included. Fixing the handler is a code change outside this documentation task.
+The journal records the error, not the payload. Capture an offending message with `mosquitto_sub -C` ([MQTT](#mqtt)) and validate it as in [Data contracts](data-contracts.md#testing-a-schema-change-before-deployment). The usual cause is a firmware change deployed before the gateway ([Deployment](deployment.md#coordinated-changes-and-schema-migrations)). Rejected events are acknowledged and logged, not stored.
 
 ### Network outages
 
 | Outage | Effect | Check and recovery |
 | --- | --- | --- |
-| ESP32 loses Wi-Fi or the Pi | No sampling while disconnected; at most one cycle is held | Automatic reconnect every 5 s. Nothing to replay |
+| ESP32 loses Wi-Fi or the Pi | Sampling pauses; the current cycle is held in RAM | Automatic reconnect every 5 s; held events publish first |
 | Pi loses internet or Tailscale | `pending_events` grows; ingestion continues | `tailscale status`. The producer retries every 5 s and drains oldest-first after recovery. The health check warns after 60 s of backlog age |
 | Kafka host down | Same as above | `sudo systemctl status kafka` on EC2 #1 |
 | Serving host cannot reach Kafka | Consumer lag grows; the dashboard goes stale | Kafka retains events (168 h). The consumer resumes from its committed offset |
@@ -446,19 +446,7 @@ A card is stale when its event `timestamp` is more than 30 s old. The dashboard 
 | `latest_received` fresh, `pending` growing | Producer or Kafka (stage 3) |
 | Kafka offsets rising, consumer lag growing | Consumer (stage 4) |
 | Consumer logs `updated=False` for fresh events | Redis holds a **future** timestamp for that key. The Lua script rejects anything older. Check the device clock. A stored `timestamp_ms` ahead of real time blocks updates until time catches up, or until you `DEL` the key |
-| Only one sensor's cards are stale | That sensor or its driver. The ESP32 stops all sensors when any read raises, so a single failing sensor usually stalls everything |
+| Only one sensor's cards are stale | That sensor or its wiring. Check the ESP32 REPL for `read failed` or `initialization failed`; it is retried every 30 s |
 | A retired sensor's card persists as stale | Redis keys never expire. `redis-cli DEL <key>` |
 | API fresh, dashboard still stale | Browser cache or an old Netlify deploy |
-| Values look wrong or jump between two ranges | The [simulator](deployment.md#simulator) may be running. It uses the same `gateway_id` and `sensor_id`s as the real sensors, so the newest timestamp wins the Redis key. Stop it |
-
-## Not available yet
-
-These capabilities do not exist in the repository. They are **Planned** or **TBD**.
-
-- External alerting or notifications for any failure.
-- Health checks for Kafka, the consumer, Redis, the API, and the ESP32; Kafka consumer lag metrics.
-- Rejected-event storage and replay.
-- An end-to-end synthetic probe (apart from the manual test event).
-- Centralized or structured logging.
-- A tested Redis rebuild procedure.
-- A device-side heartbeat or firmware version report from the ESP32.
+| Extra cards with `sim-` IDs | The [simulator](deployment.md#simulator) ran. Its Redis keys (`greenhouse:latest:sim-gateway-001:*`) stay until deleted |

@@ -14,7 +14,7 @@ Most of the pipeline is sensor-agnostic. A sensor that emits a measurement type 
 | Driver file in `firmware/esp32/` | Usually | If the sensor needs more than a few raw register reads |
 | [`firmware/esp32/sensors.py`](../firmware/esp32/sensors.py) | **Yes** | Always: initialize the device and return its measurements |
 | `config.py` and [`config.example.py`](../firmware/esp32/config.example.py) | **Yes** | Always: add the new `sensor_id` (and any pins/addresses you choose to configure) |
-| [`firmware/esp32/main.py`](../firmware/esp32/main.py) | No | Unless the event shape changes. It calls `sensors.init_all()` and `sensors.read_all()` and sends whatever comes back |
+| [`firmware/esp32/main.py`](../firmware/esp32/main.py) | No | Unless the event shape changes. It calls `sensors.init_all()`, `sensors.retry_failed()`, and `sensors.read_all()` and sends whatever comes back |
 | `schemas/` | Only if `measurement_type` or `unit` is not in the current schema | See [Does the schema support it?](#does-the-schema-support-it) |
 | [`gateway/ingest.py`](../gateway/ingest.py) | Only for a **new schema version** | The `SCHEMAS` dict is hard-coded. Restart ingest after changing it |
 | SQLite outbox, Kafka producer, Kafka topic | No | Events are stored and forwarded as opaque JSON |
@@ -31,17 +31,17 @@ Most of the pipeline is sensor-agnostic. A sensor that emits a measurement type 
 | --- | --- | --- |
 | I²C over STEMMA QT | **Yes**, both sensors | Shared bus, daisy-chained cables, no soldering |
 | I²C (other connectors) | No | Same bus and code. Wire to the Feather's SDA/SCL pins |
-| Analog (ADC) | No | See the Wi-Fi caveat below |
-| Digital GPIO, 1-Wire, UART, SPI | No | Not used in this repo. Follow the same `init_all`/`read_all` pattern |
+| Analog (ADC) | No | Use an ADC1 pin (see the checklist below) |
+| Digital GPIO, 1-Wire, UART, SPI | No | Not used in this repo. Follow the same init, retry, and read pattern |
 
-Current bus configuration, from `sensors.py`:
+Bus configuration, from the constants at the top of `sensors.py`:
 
 | Item | Value |
 | --- | --- |
-| STEMMA QT power enable | GPIO2, driven high, then a 500 ms wait |
-| I²C | `SoftI2C`, SDA GPIO22, SCL GPIO20, 100 kHz |
-| BME280 address | `0x77` (the driver's default is `0x76`; the Adafruit board uses `0x77`) |
-| Soil sensor address | `0x36` |
+| STEMMA QT power enable | `STEMMA_POWER_PIN` = GPIO2, driven high, then a 500 ms wait |
+| I²C | `SoftI2C`, `I2C_SDA_PIN` = GPIO22, `I2C_SCL_PIN` = GPIO20, `I2C_FREQUENCY` = 100 kHz |
+| BME280 address | `BME280_ADDRESS` = `0x77` (the driver's default is `0x76`; the Adafruit board uses `0x77`) |
+| Soil sensor address | `SOIL_ADDRESS` = `0x36` |
 
 Checklist before wiring:
 
@@ -88,9 +88,9 @@ Two patterns exist in the repo:
 
 ```python
 # Soil sensor: raw capacitance via seesaw (sensors.py)
-i2c.writeto(0x36, bytes([0x0F, 0x10]))
+i2c.writeto(SOIL_ADDRESS, bytes([0x0F, 0x10]))
 time.sleep_ms(20)
-raw = i2c.readfrom(0x36, 2)
+raw = i2c.readfrom(SOIL_ADDRESS, 2)
 return (raw[0] << 8) | raw[1]
 ```
 
@@ -98,14 +98,15 @@ If you add a driver file, remember that nothing copies it to the device automati
 
 ## 4. Edit `sensors.py` and configuration
 
-`main.py` uses two functions from `sensors.py`. Everything else in that file is helper code.
+`main.py` calls three functions from `sensors.py`. Everything else in that file is helper code.
 
 | Function | Called by `main.py` | Contract |
 | --- | --- | --- |
-| `init_all()` | Once at boot | Create the I²C bus, verify devices, return a dict of device handles |
-| `read_all(devices)` | Every sample cycle | Return a flat list of measurement dicts |
+| `init_all()` | Once at boot | Power the bus and create the I²C object, build the `devices` dict (`"i2c"` plus one entry per sensor, initially `None`), call `retry_failed()`, and return the dict |
+| `retry_failed(devices)` | At boot and every `SENSOR_RETRY_SECONDS` (30 s, set in `main.py`) | For each sensor whose entry is `None`, try to initialize it. Log success or failure; never raise |
+| `read_all(devices)` | Every sample cycle | Read each available sensor inside its own `try`/`except`, append its measurements to a flat list, and set the entry to `None` if the read fails |
 
-`init_bme280()` and `init_soil()` in the file are single-sensor helpers that `init_all()` does not call.
+Per-sensor helpers follow a fixed shape: `init_<sensor>(i2c)` verifies the device and returns a handle (raising `RuntimeError` if it is not detected), and `read_<sensor>(handle)` returns plain numbers.
 
 **Measurement contract.** `read_all()` returns dicts with exactly these keys. `main.create_event()` adds `schema_version`, `event_id`, `gateway_id`, and `timestamp`, and applies `float(value)`:
 
@@ -117,8 +118,6 @@ If you add a driver file, remember that nothing copies it to the device automati
     "unit": "celsius",                      # str, must be in the schema enum
 }
 ```
-
-A missing key raises `KeyError` inside the main loop's generic handler, which retries every 5 s without publishing anything.
 
 ### How the current sensors are wired in
 
@@ -143,36 +142,60 @@ Illustrative only; `examplesensor`, `Example`, and `0x44` are placeholders:
 # sensors.py
 import examplesensor
 
+EXAMPLE_ADDRESS = 0x44                                          # new
+
+
+def init_example(i2c):                                          # new
+    if EXAMPLE_ADDRESS not in i2c.scan():
+        raise RuntimeError("Example sensor not detected")
+
+    return examplesensor.Example(i2c=i2c, address=EXAMPLE_ADDRESS)
+
+
 def init_all():
-    Pin(2, Pin.OUT, value=1)
-    time.sleep_ms(500)
+    i2c = init_i2c()
 
-    i2c = SoftI2C(sda=Pin(22), scl=Pin(20), freq=100000)
-    addresses = i2c.scan()
-
-    if 0x77 not in addresses:
-        raise RuntimeError("BME280 not detected")
-    if 0x36 not in addresses:
-        raise RuntimeError("Soil sensor not detected")
-    if 0x44 not in addresses:                                   # new
-        raise RuntimeError("Example sensor not detected")       # new
-
-    return {
-        "bme280": bme280.BME280(i2c=i2c, address=0x77),
-        "soil": i2c,
-        "example": examplesensor.Example(i2c=i2c, address=0x44),  # new
+    devices = {
+        "i2c": i2c,
+        "bme280": None,
+        "soil": None,
+        "example": None,                                        # new
     }
+
+    retry_failed(devices)
+    return devices
+
+
+def retry_failed(devices):
+    i2c = devices["i2c"]
+
+    # ... existing BME280 and soil blocks ...
+
+    if devices["example"] is None:                              # new
+        try:
+            devices["example"] = init_example(i2c)
+            print("Example sensor initialized")
+        except Exception as exc:
+            print("Example sensor initialization failed:", exc)
+
 
 def read_all(devices):
     measurements = []
-    # ... existing BME280 and soil measurements ...
 
-    measurements.append({                                        # new
-        "sensor_id": config.EXAMPLE_SENSOR_ID,
-        "measurement_type": "air_temperature",
-        "value": devices["example"].read_celsius(),
-        "unit": "celsius",
-    })
+    # ... existing BME280 and soil blocks ...
+
+    if devices["example"] is not None:                          # new
+        try:
+            measurements.append({
+                "sensor_id": config.EXAMPLE_SENSOR_ID,
+                "measurement_type": "air_temperature",
+                "value": devices["example"].read_celsius(),
+                "unit": "celsius",
+            })
+        except Exception as exc:
+            print("Example sensor read failed:", exc)
+            devices["example"] = None
+
     return measurements
 ```
 
@@ -182,15 +205,14 @@ Add the ID in both `config.py` (git-ignored, device-local) and `config.example.p
 EXAMPLE_SENSOR_ID = "example-001"
 ```
 
-### Failure behavior you inherit
+`main.py` needs no change: the new sensor is initialized at boot, retried every 30 s if it is missing, and dropped from a cycle (then retried) if a read raises.
 
-The current structure has no per-sensor isolation:
+### Failure behavior
 
-- **At boot**, `init_all()` raises if any expected address is missing. The exception occurs outside the main loop's `try`, so `main.py` exits and the board sits at the REPL until reset.
-- **During operation**, an exception in `read_all()` (for example an `OSError` from a loose cable) is caught by the generic handler in `main()`. The whole cycle is lost, including readings from sensors that were fine, the MQTT client is disconnected, and the loop retries every 5 s.
+- **At boot**, a sensor that is not detected is logged (`<sensor> initialization failed: …`) and left as `None`. The program continues with the sensors that initialized.
+- **During operation**, an exception from one sensor's read is logged (`<sensor> read failed: …`), that sensor is set to `None`, and the others still publish in the same cycle. Its next initialization attempt happens within 30 s.
+- **Network errors** are separate: Wi-Fi, NTP, and MQTT failures disconnect the client and retry every 5 s without restarting the program ([Architecture](architecture.md#event-flow)).
 - **Pacing.** Events publish one by one, each waiting for a PUBACK. Each extra measurement lengthens the cycle slightly. Keep total read-plus-publish time well below `SAMPLE_INTERVAL_SECONDS`.
-
-Per-sensor `try`/`except` in `read_all()` and tolerant initialization are possible hardening steps (listed as **Planned** in the root README under firmware reliability). Decide deliberately before using them, because swallowing a sensor error also hides an outage.
 
 ## 5. Assign IDs and measurement types
 
@@ -245,8 +267,8 @@ Events travel as opaque JSON after the gateway, so verify the following.
 
 Dashboard behavior for new data, from `App.jsx`:
 
-- Label and order come from the `METRICS` map. Unknown types fall back to the type name with underscores replaced, capitalized, and sorted last. `atmospheric_pressure` is currently in that fallback state.
-- `formatValue` has cases for `celsius`, `percent`, and `raw_capacitance`. Any other unit is shown as `String(value)` plus the unit text.
+- Label and order come from the `METRICS` map. Unknown types fall back to the type name with underscores replaced, capitalized, and sorted last. `atmospheric_pressure` has its own `METRICS` entry.
+- `formatValue` has cases for `celsius`, `percent`, `hpa`, and `raw_capacitance`. Any other unit is shown as `String(value)` plus the unit text.
 - Any reading with `unit: "percent"` also renders a 0 to 100 meter bar. That suits humidity but may be wrong for a new quantity.
 - Staleness (older than 30 s) is automatic.
 
@@ -254,21 +276,21 @@ To polish the display, add a `METRICS` entry and a `formatValue` case. Neither i
 
 ## Tests
 
-What exists: pytest tests for `gateway/cleanup.py` and `gateway/health.py`, run in CI by [`.github/workflows/tests.yml`](../.github/workflows/tests.yml) (`tests/gateway/` only). Nothing covers ingest, schemas, the producer, the consumer, the API, the dashboard, or the firmware.
+[`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) runs `pytest tests/` in CI on every push and pull request. The suites cover the schemas, ingest, cleanup, health, the live consumer, and the API ([Deployment](deployment.md#running-the-tests-locally)). The firmware, producer, and dashboard have no automated tests; the dashboard job runs lint and build.
 
 For a new sensor:
 
 | Case | Test |
 | --- | --- |
 | Firmware-only (existing schema) | Manual: REPL read on the bench, then watch `Published:` lines and the MQTT stream ([Operations](operations.md#1-esp32-publishes-but-mqtt-shows-nothing)). MicroPython code has no automated tests |
-| Schema change | The validation script and negative cases in [Data contracts](data-contracts.md#testing-a-schema-change-before-deployment) |
-| Changed gateway code | Add pytest tests under `tests/gateway/` (they run in CI automatically) |
-| Tests in a new directory | Update the workflow, which only runs `tests/gateway/` |
+| Schema change | Extend `tests/schemas/test_sensor_events.py` and run the validation script ([Data contracts](data-contracts.md#testing-a-schema-change-before-deployment)) |
+| Changed gateway code | Add pytest tests under `tests/gateway/` |
+| Changed consumer or API code | Add tests under `tests/consumers/` or `tests/api/` (these use Redis through `TEST_REDIS_URL`) |
 
-Run the suite locally:
+New test files anywhere under `tests/` run in CI without workflow changes. Run the suite locally:
 
 ```bash
-.venv/bin/python -m pytest tests/gateway/ -v
+TEST_REDIS_URL=redis://localhost:6379/15 .venv/bin/python -m pytest tests/ -v
 ```
 
 ### Test the gateway with a synthetic event
@@ -309,8 +331,8 @@ sudo docker compose exec redis redis-cli DEL greenhouse:latest:pi-001:test-001:a
 
 Order matters only when the schema or gateway changes. Full procedures: [Deployment](deployment.md).
 
-1. **Merge and push**, then confirm CI passes.
-2. **Gateway (only if schema or `ingest.py` changed).** On the Pi: `git pull`, `sudo systemctl restart greenhouse-ingest`. Test with a synthetic event.
+1. **Merge to `main`.** CI runs the tests and dashboard build, then deploys the gateway services to the Pi and the containers to the serving host.
+2. **Gateway (only if schema or `ingest.py` changed).** Confirm the `Deploy Raspberry Pi` job succeeded, then test with a synthetic event.
 3. **Dashboard (optional).** Push to the branch Netlify builds from.
 4. **Firmware last.** Interrupt the device, copy changed files (new driver, `sensors.py`, `config.py`, and `main.py` if changed), reset:
 
@@ -337,10 +359,10 @@ Verify in order (details and commands in [Operations](operations.md#troubleshoot
 
 ### Rollback
 
-- **Firmware.** There is no on-device versioning. Check out the previous commit locally, copy the earlier `sensors.py`, `config.py`, and `main.py` back to the device, and reset. A sensor that crashes the boot sequence can be removed by redeploying a `sensors.py` without it.
-- **Schema/gateway.** Leave the new schema version registered until no device emits it and any queued or outbox events have drained. Rolling back the gateway while a device still publishes the new version means those events are rejected and dropped.
+- **Firmware.** Check out the previous commit locally, copy the earlier `sensors.py`, `config.py`, and `main.py` back to the device, and reset.
+- **Schema/gateway.** Keep the new schema version registered until no device emits it and any queued or outbox events have drained.
 - **Stale data.** Redis keys of a removed sensor stay on the dashboard as stale cards until deleted: `redis-cli DEL <key>`, with the key pattern shown above.
-- **Dashboard.** Revert the commit; Netlify rebuilds from Git (confirm your Netlify deploy settings).
+- **Dashboard.** Revert the commit; Netlify rebuilds from Git.
 
 ## Documentation updates
 
@@ -357,8 +379,8 @@ Hardware
 [ ] I²C scan (or ADC read) works in the REPL on the bench
 Firmware
 [ ] Driver copied into firmware/esp32/ (if needed) and added to the fs cp deploy list
-[ ] sensors.py: init_all() verifies and returns the device; read_all() returns
-    {sensor_id, measurement_type, value, unit} dicts
+[ ] sensors.py: init_<sensor>(i2c) verifies the device; devices dict, retry_failed(),
+    and read_all() handle it; read_all() returns {sensor_id, measurement_type, value, unit} dicts
 [ ] New sensor_id added to config.py (device) and config.example.py (repo)
 [ ] sensor_id unique; same type from multiple sensors uses distinct sensor_ids
 Contract
@@ -370,7 +392,7 @@ Downstream
 [ ] Dashboard: label, order, or format added only if wanted
 [ ] Capacity (rows per day) acceptable
 Tests and deploy
-[ ] pytest tests/gateway/ passes; schema validation script run if the schema changed
+[ ] pytest tests/ passes; schema tests extended and validation script run if the schema changed
 [ ] Gateway deployed and tested with a synthetic event BEFORE firmware (schema changes)
 [ ] Firmware deployed; verified hop by hop to the dashboard
 [ ] Test Redis keys removed; rollback path known

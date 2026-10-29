@@ -410,12 +410,22 @@ The application includes:
 - Unique event IDs for downstream deduplication
 - Retries for events not yet successfully published
 - Continuous sampling at a configurable interval
+- Independent sensors: each sensor initializes and reads on its own, so one missing or failing sensor does not stop the others
+- Automatic sensor recovery: an unavailable sensor is re-initialized every 30 seconds (`SENSOR_RETRY_SECONDS` in `main.py`)
+- Non-blocking network retry: a Wi-Fi, NTP, or MQTT error disconnects the client and schedules a retry in 5 seconds without restarting the program
 
-The Raspberry Pi's SQLite outbox provides durable buffering between MQTT ingestion and Kafka delivery.
+Serial output shows the state of each sensor and the network:
 
-**Current limitation:** The ESP32's pending events are stored in RAM. Unsent readings can be lost during an ESP32 power failure or restart. QoS 1 provides MQTT acknowledgments but does not guarantee durable storage on the ESP32 or delivery through the entire downstream pipeline.
+```text
+BME280 initialized
+Soil sensor initialization failed: Soil sensor not detected
+Soil sensor initialized
+BME280 read failed: ...
+Telemetry error: ...
+Network retry in 5 seconds
+```
 
-Persistent edge buffering, bounded network timeouts, and device-health reporting are potential future improvements.
+Events not yet acknowledged by the broker are held in RAM and published first after a reconnect. The Raspberry Pi's SQLite outbox provides durable buffering between MQTT ingestion and Kafka delivery.
 
 ## 10. Verify MQTT Delivery
 
@@ -473,8 +483,9 @@ Once accepted into SQLite, events are forwarded to Kafka and consumed by the liv
 | Firmware flashing stops early | USB connection, direct port, WebSerial flashing |
 | MicroPython REPL unavailable | Correct firmware, flash offset `0x1000`, board reset |
 | I²C scan returns `[]` | GPIO2 power enable, STEMMA QT cable connections |
-| BME280 not detected | Expected address `0x77` |
-| Soil sensor not detected | Expected address `0x36` |
+| `BME280 initialization failed: BME280 not detected` | Expected address `0x77`; the sensor is retried every 30 seconds |
+| `Soil sensor initialization failed: Soil sensor not detected` | Expected address `0x36`; the sensor is retried every 30 seconds |
+| `BME280 read failed` or `Soil sensor read failed` | Cable or bus error; the sensor is re-initialized within 30 seconds |
 | Wi-Fi connection fails | SSID, password, 2.4 GHz compatibility |
 | MQTT connection fails | Pi LAN IP, Mosquitto listener, credentials, network |
 | MQTT receives events but SQLite does not | Ingestor logs and schema v2 validation |

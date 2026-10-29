@@ -11,8 +11,9 @@ const STALE_AFTER_MS = 30_000;
 const METRICS = {
   air_temperature: { label: "Air temperature", order: 0 },
   relative_humidity: { label: "Relative humidity", order: 1 },
-  soil_moisture: { label: "Soil moisture", order: 2 },
-  soil_temperature: { label: "Soil temperature", order: 3 },
+  atmospheric_pressure: { label: "Atmospheric pressure", order: 2 },
+  soil_moisture: { label: "Soil moisture", order: 3 },
+  soil_temperature: { label: "Soil temperature", order: 4 },
 };
 
 function metricInfo(type) {
@@ -32,6 +33,8 @@ function formatValue({ value, unit }) {
       return { number: value.toFixed(1), suffix: "°C" };
     case "percent":
       return { number: value.toFixed(1), suffix: "%" };
+    case "hpa":
+      return { number: value.toFixed(1), suffix: "hPa" };
     case "raw_capacitance":
       return { number: Math.round(value).toString(), suffix: "raw" };
     default:

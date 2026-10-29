@@ -6,7 +6,7 @@ The project uses a Raspberry Pi Zero 2 W as an edge gateway, two AWS EC2 instanc
 
 Infrastructure configuration is version-controlled to support reproducible deployments, consistent service management, and easier troubleshooting.
 
-For the complete deployment procedure, rollback, and known limitations, see [`docs/deployment.md`](../docs/deployment.md). For monitoring and troubleshooting, see [`docs/operations.md`](../docs/operations.md).
+For the complete deployment procedure, CI/CD, and rollback, see [`docs/deployment.md`](../docs/deployment.md). For monitoring and troubleshooting, see [`docs/operations.md`](../docs/operations.md).
 
 ## Architecture
 
@@ -68,16 +68,15 @@ infrastructure/
 │   ├── greenhouse-cleanup.service
 │   ├── greenhouse-cleanup.timer
 │   ├── greenhouse-health.service
-│   └── greenhouse-health.timer
+│   ├── greenhouse-health.timer
+│   └── kafka.service
 ├── scripts/
 │   ├── install-pi-services.sh
 │   └── verify-deployment.sh
 └── README.md
 ```
 
-This is the current contents of `infrastructure/`. Each configuration should reflect a verified deployment, and scripts should be tested on their intended hosts.
-
-The Kafka broker's systemd unit (`kafka.service`) is not versioned in this repository; only the broker configuration template is. Caddy's template is named `caddyfile` here and is deployed as `/etc/caddy/Caddyfile`.
+The Pi units are installed by `scripts/install-pi-services.sh`. `kafka.service` runs on EC2 #1 and is installed by hand. Caddy's template is named `caddyfile` here and is deployed as `/etc/caddy/Caddyfile`.
 
 ## Deployment Environments
 
@@ -118,7 +117,7 @@ Password hashes are stored in `/etc/mosquitto/passwd` on the Pi and must not be 
 
 The SQLite outbox supports retrying failed Kafka deliveries without losing successfully persisted measurements.
 
-Pending events are retained until Kafka acknowledges delivery. Duplicate delivery is possible, so downstream consumers must handle repeated events.
+Pending events are retained until Kafka acknowledges delivery. Delivery is at-least-once, so downstream consumers deduplicate on `event_id`.
 
 ### Installing systemd Units
 
@@ -141,7 +140,7 @@ sudo systemctl enable --now greenhouse-ingest.service
 sudo systemctl enable --now greenhouse-kafka-producer.service
 ```
 
-The install script overwrites the installed unit files. If a Pi already runs a unit that differs from the repository copy, compare `systemctl cat greenhouse-ingest.service` with the repository version before installing.
+To compare an installed unit with the repository copy, use `systemctl cat greenhouse-ingest.service`.
 
 Restart gateway applications when appropriate:
 
@@ -179,7 +178,7 @@ Deployed configuration:
 
 The template uses a placeholder for the EC2 instance's private Tailscale IP address.
 
-Before deployment, replace the placeholder with the appropriate address and ensure the installed Kafka version supports the documented KRaft configuration.
+Before deployment, replace the placeholder with the instance's Tailscale address.
 
 ### Broker Settings
 
@@ -202,9 +201,17 @@ The telemetry topic is:
 
 `greenhouse.sensor-readings`
 
-The deployment currently uses a single partition and replication factor one.
+The topic uses a single partition and replication factor one.
 
 ### Service Management
+
+The broker runs as the systemd unit [`systemd/kafka.service`](systemd/kafka.service), installed as `/etc/systemd/system/kafka.service` (user `ubuntu`, 512 MB heap, `Restart=on-failure`):
+
+```bash
+sudo cp infrastructure/systemd/kafka.service /etc/systemd/system/kafka.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now kafka
+```
 
 ```bash
 sudo systemctl status kafka
@@ -225,8 +232,6 @@ export KAFKA_BOOTSTRAP_SERVERS=YOUR_TAILSCALE_IP:9092
 bash infrastructure/scripts/verify-deployment.sh kafka
 ```
 
-**Reliability limitation:** A single Kafka broker with replication factor one does not provide high availability or protection against broker storage loss.
-
 ## 3. Live Backend — AWS EC2 #2
 
 The live backend consists of three Docker Compose services.
@@ -243,7 +248,7 @@ Docker Compose configuration is maintained at the repository root:
 
 ### Deployment
 
-From the repository root on EC2 #2:
+A merge to `main` rebuilds and recreates `live-consumer` and `api` through GitHub Actions. To deploy the whole stack by hand, run from the repository root on EC2 #2:
 
 ```bash
 sudo docker compose config
@@ -392,7 +397,7 @@ The gateway's SQLite outbox buffers events during Kafka outages.
 
 Once Kafka becomes available, pending events are retried.
 
-Redis holds a derived latest-state view. Recovery from Redis data loss requires a deliberate replay or restoration procedure; committed Kafka offsets do not automatically rewind.
+Redis holds a derived latest-state view. To rebuild it, replay Kafka with a new consumer group (see [`docs/operations.md`](../docs/operations.md#4-kafka-has-events-but-redis-is-empty)).
 
 ### Logs
 
@@ -410,29 +415,16 @@ Redis holds a derived latest-state view. Recovery from Redis data loss requires 
 Infrastructure and application changes follow this process:
 
 1. Implement changes on a feature branch.
-2. Run relevant local tests.
-3. Push to GitHub.
-4. Verify GitHub Actions CI results.
-5. Review and merge changes.
-6. Manually deploy the tested revision to the target environment (pull the revision on the host, then restart services or rebuild containers; see [`docs/deployment.md`](../docs/deployment.md)).
+2. Run relevant local tests (`python -m pytest tests/`).
+3. Push to GitHub; Actions runs the pytest suite and the dashboard lint and build.
+4. Review and merge to `main`.
+5. On `main`, GitHub Actions deploys over Tailscale and SSH: the Pi's ingest and producer services are restarted, and the serving host's `live-consumer` and `api` containers are rebuilt.
+6. Apply what CI does not deploy by hand: Pi systemd units, the SQLite migration, Kafka host changes, Caddy, and the ESP32 firmware (see [`docs/deployment.md`](../docs/deployment.md)).
 7. Run the corresponding deployment verification script.
 8. Confirm service health and data freshness.
 
-The repository's automated tests are maintained in `tests/`, with GitHub Actions workflows under `.github/workflows/`. The workflow currently runs tests only; build and deployment steps are manual.
+Tests live in `tests/`, and the workflow is [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 
-## 9. Known Limitations and Future Improvements
+## 9. Future Improvements
 
-This infrastructure is a production-inspired portfolio deployment rather than a fully fault-tolerant production platform.
-
-Current limitations include:
-
-- Single-node Kafka without replication.
-- Manually provisioned EC2 instances.
-- No centralized external outage alerting.
-- Limited automated end-to-end failure testing.
-- No automated infrastructure provisioning.
-- Redis recovery procedures requiring additional validation.
-
-Planned improvements include expanded integration testing, CI/CD that builds, validates, and deploys with rollback (today `verify-deployment.sh` is run by hand), centralized observability, and potentially Terraform-based infrastructure provisioning.
-
-The objective is to demonstrate reliable event processing, clear service boundaries, durable buffering, reproducible configuration, and operational engineering practices.
+The roadmap in the root [README](../README.md#roadmap) lists planned infrastructure work, including Terraform-based provisioning, deploy verification and rollback in CI/CD, centralized observability, and a multi-broker Kafka cluster.

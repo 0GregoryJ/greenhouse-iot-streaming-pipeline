@@ -86,8 +86,7 @@ def collect_metrics(db_path, now):
 
     total, pending, oldest_pending, latest_received, latest_delivered = row
 
-    # WAL mode may create additional -wal and -shm files.
-    # This value reports only the main database file.
+    # sqlite_db_bytes reports only the main database file.
     disk = shutil.disk_usage(db_path.parent)
 
     return {

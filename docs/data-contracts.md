@@ -40,7 +40,7 @@ All eight fields are required in both versions. `additionalProperties` is `false
 
 Permitted `unit` values: `raw_capacitance`, `celsius`, `percent` (v1 and v2), plus `hpa` (v2 only).
 
-The schema does **not** pair units with measurement types, with one exception: in v2, `atmospheric_pressure` must use `hpa` (an `allOf`/`if`/`then` rule). Other combinations, such as `air_temperature` with `hpa`, validate. Correct pairing is a firmware responsibility.
+The schema pairs units with measurement types in one case: in v2, `atmospheric_pressure` must use `hpa` (an `allOf`/`if`/`then` rule). For other types, pairing is the producer's responsibility, so the firmware sets the unit for each measurement type.
 
 ## Examples
 
@@ -85,19 +85,19 @@ Why it works for this pipeline:
 - The Redis key `greenhouse:latest:{gateway_id}:{sensor_id}:{measurement_type}` maps one-to-one to events, so the consumer needs no per-sensor logic.
 - The producer, consumer, and API are agnostic to which sensors exist.
 
-Trade-offs: more messages (48 per minute at a 5 s interval with the current sensors), and no atomic multi-measurement snapshot. Readings from one cycle share a timestamp but are separate events and can arrive or fail independently.
+Volume is 48 messages per minute at a 5 s interval with the current sensors. Readings from one cycle share a timestamp but are separate events, so they can arrive independently and a failed sensor drops out without affecting the others.
 
 ## Where validation happens
 
 | Stage | What is checked | Notes |
 | --- | --- | --- |
-| ESP32 (`main.py`) | Nothing against the schema | Builds events from constants and `float(value)`. Clock must be at least year 2025 |
+| ESP32 (`main.py`) | Nothing against the schema | Builds events from constants and `float(value)`; publishes only when the clock is year 2025 or later |
 | Simulator | Schema v1 with `FormatChecker` | Stops on any invalid event it generates |
-| Mosquitto | Authentication only | No payload validation, no topic ACLs in the repo config |
-| **Gateway ingest** | Full JSON Schema by `schema_version`, **without** a format checker | The authoritative gate. `uuid` and `date-time` formats are **not** enforced here: a non-UUID `event_id` or a naive timestamp passes |
+| Mosquitto | Authentication only | No payload validation |
+| **Gateway ingest** | Full JSON Schema by `schema_version`, **without** a format checker | The authoritative gate. `format` keywords (`uuid`, `date-time`) are annotations here, not checked |
 | Kafka producer | Nothing | Forwards the stored JSON unchanged |
 | Kafka | Nothing | No schema registry |
-| Live consumer | Presence of `event_id`, `sensor_id`, `gateway_id`, `measurement_type`, `timestamp`, `value`, `unit`; timestamp parses with `datetime.fromisoformat` and has a timezone; `value` is `int` or `float` | Stricter than the gateway on timestamps; looser everywhere else. It ignores `schema_version`, enums, and extra fields |
+| Live consumer | Presence of `event_id`, `sensor_id`, `gateway_id`, `measurement_type`, `timestamp`, `value`, `unit`; timestamp parses with `datetime.fromisoformat` and has a timezone; `value` is `int` or `float` | Checks timestamps more strictly than the gateway; ignores `schema_version`, enums, and extra fields |
 | API | `float(record["value"])` | Failure returns HTTP 503 |
 | Dashboard | Unit-based formatting; unknown types get a generic label | No validation |
 
@@ -105,15 +105,10 @@ Trade-offs: more messages (48 per minute at a 5 s interval with the current sens
 
 | Where | Condition | Behavior | Event kept? |
 | --- | --- | --- | --- |
-| Ingest | Malformed JSON, non-UTF-8, unsupported `schema_version`, or schema violation | Logs `Invalid event: <error>` and **acknowledges** the MQTT message so it is not redelivered | No. Logged and dropped |
-| Consumer | Missing field, unparsable or timezone-less timestamp, non-numeric value | Logs `Skipping malformed event at partition=… offset=…` and commits the offset | No. Still in Kafka until retention expires |
+| Ingest | Malformed JSON, non-UTF-8, unsupported `schema_version`, or schema violation | Logs `Invalid event: <error>` and acknowledges the MQTT message so it is not redelivered | No. The error is logged; the payload is not stored |
+| Consumer | Missing field, unparsable or timezone-less timestamp, non-numeric value | Logs `Skipping malformed event at partition=… offset=…` and commits the offset | Kept in Kafka until retention expires |
 
-Rejected-event storage (a table or dead-letter queue with bounded retention) is **Planned**. Until then, the only record of a rejected event is a journal line, and that line carries the validation error, not the payload.
-
-Gaps observed from reading `ingest.py` (not exercised against a running broker):
-
-- A payload that is valid JSON but not an object (for example `[]`), or a `schema_version` that is not a hashable scalar, raises outside the `except (ValueError, ValidationError)` clause. The callback raises, the process exits, and the message is unacknowledged. With a persistent session it can be redelivered after the restart, which risks a restart loop. See [Operations](operations.md#poison-message-restart-loop).
-- Because formats are not enforced, an event can pass the gateway and then be skipped by the consumer (for example a timestamp without a timezone).
+Storing rejected events is on the [roadmap](../README.md#roadmap).
 
 ## Compatibility rules
 
@@ -143,7 +138,7 @@ Rules for a new version:
 2. Register it in the `SCHEMAS` dict in [`gateway/ingest.py`](../gateway/ingest.py). Schemas are loaded at process start, so ingest must be restarted.
 3. Bump `SCHEMA_VERSION` in the firmware's `main.py` only after the gateway accepts the new version.
 4. Do not retire a version while old events may still be in an MQTT queue, the SQLite outbox, or Kafka (168 h by default). The producer and consumer do not look at `schema_version`, so retained events of old versions still flow.
-5. Future aggregating consumers (Flink, Snowflake, dbt; **Planned**) must handle every version present in retained data and deduplicate on `event_id`.
+5. Aggregating consumers (such as the planned Flink, Snowflake, and dbt work) handle every version present in retained data and deduplicate on `event_id`.
 
 ## What to check after a contract change
 
@@ -160,12 +155,12 @@ Rules for a new version:
 | Redis | New keys appear automatically | Only if key structure or stored fields change. Old keys need manual cleanup |
 | [`api/main.py`](../api/main.py) | Builds the response from fixed hash fields; `value` must be numeric | Only if the response shape changes |
 | [`dashboard/src/App.jsx`](../dashboard/src/App.jsx) | Label and order in `METRICS`; `formatValue` for the unit | Optional for new types (generic fallback exists); needed for a unit that requires special formatting |
-| `tests/` | Add coverage for any code you changed | Code changes |
+| `tests/` | Extend `tests/schemas/` (and `tests/gateway/test_ingest.py` for gateway behavior) | Schema or code changes |
 | `docs/` | This file, [Adding a sensor](adding-a-sensor.md), the root README | Always |
 
 ## Testing a schema change before deployment
 
-There is no staging environment and no schema-specific test in CI today (CI runs `tests/gateway/` only).
+CI runs the whole `tests/` tree on every push and pull request ([Deployment](deployment.md#running-the-tests-locally)). There is no separate staging environment.
 
 **1. Validate schemas and examples locally** (same validation settings as the gateway; run from the repository root with the gateway dependencies installed):
 
@@ -184,12 +179,14 @@ for v in (1, 2):  # add your new version
 EOF
 ```
 
-**2. Check negative cases** against both the new and old versions: an old-version event still passes its own version, a new-only value is rejected by the old version, and an extra field is rejected. A durable schema contract test under `tests/` is **Planned**.
+**2. Extend the schema tests.** [`tests/schemas/test_sensor_events.py`](../tests/schemas/test_sensor_events.py) loads each version into a `SCHEMAS` dict and validates with `FormatChecker`. Add the new version there, with cases that an old-version event still passes its own version, a new-only value is rejected by the old version, and an extra field is rejected. Existing cases cover v1 and v2 acceptance, v1 rejecting `atmospheric_pressure`, a missing `event_id`, an extra field, and a wrong unit.
 
-**3. Run existing tests:**
+**3. Run the tests:**
 
 ```bash
-.venv/bin/python -m pytest tests/gateway/ -v
+TEST_REDIS_URL=redis://localhost:6379/15 .venv/bin/python -m pytest tests/ -v
+# without Redis: schema and gateway tests only
+.venv/bin/python -m pytest tests/schemas tests/gateway -v
 ```
 
 **4. Replicate firmware output.** Run a representative event from `create_event()` in `main.py` through the validator. The firmware is MicroPython, so test the dictionary shape on the host or review it by hand.

@@ -2,14 +2,9 @@
 """
 ESP32 greenhouse telemetry publisher.
 
-Hardware:
-    Adafruit ESP32 Feather V2
+Sensors -> ESP32 -> MQTT -> Raspberry Pi
 
-Pipeline:
-    Sensors -> ESP32 -> MQTT -> Raspberry Pi
-
-Event contract:
-    One JSON event per measurement, schema v2.
+Publishes schema v2 events continuously.
 """
 
 import json
@@ -25,13 +20,17 @@ from wifi import connect_wifi
 
 
 SCHEMA_VERSION = 2
+
 RETRY_SECONDS = 5
+SENSOR_RETRY_SECONDS = 30
 NTP_RESYNC_SECONDS = 3600
 
 
 def generate_event_id():
-    """Generate a random UUID version 4."""
+    """Generate a UUID version 4."""
+
     data = bytearray(os.urandom(16))
+
     data[6] = (data[6] & 0x0F) | 0x40
     data[8] = (data[8] & 0x3F) | 0x80
 
@@ -47,7 +46,8 @@ def generate_event_id():
 
 
 def utc_timestamp():
-    """Return the current time as an ISO 8601 UTC string."""
+    """Return an ISO 8601 UTC timestamp."""
+
     now = time.gmtime()
 
     if now[0] < 2025:
@@ -57,23 +57,15 @@ def utc_timestamp():
 
 
 def sync_clock():
-    """Synchronize ESP32 clock with an NTP server."""
+    """Synchronize the device clock using NTP."""
+
     ntptime.settime()
     print("UTC synchronized:", utc_timestamp())
 
 
 def create_event(measurement, timestamp):
-    """
-    Convert a sensor measurement into a schema v2 event.
+    """Convert a measurement into a schema v2 event."""
 
-    Expected measurement:
-        {
-            "sensor_id": "bme280-001",
-            "measurement_type": "air_temperature",
-            "value": 23.4,
-            "unit": "celsius"
-        }
-    """
     return {
         "schema_version": SCHEMA_VERSION,
         "event_id": generate_event_id(),
@@ -86,8 +78,25 @@ def create_event(measurement, timestamp):
     }
 
 
+def collect_events(sensor_devices):
+    """Collect all available measurements."""
+
+    measurements = sensors.read_all(sensor_devices)
+
+    if not measurements:
+        return []
+
+    timestamp = utc_timestamp()
+
+    return [
+        create_event(measurement, timestamp)
+        for measurement in measurements
+    ]
+
+
 def connect_mqtt():
-    """Create and connect an MQTT client."""
+    """Connect to the Raspberry Pi MQTT broker."""
+
     client = MQTTClient(
         client_id=config.MQTT_CLIENT_ID,
         server=config.MQTT_HOST,
@@ -98,27 +107,19 @@ def connect_mqtt():
     )
 
     client.connect()
+
     print("Connected to MQTT:", config.MQTT_HOST)
+
     return client
-
-
-def collect_events(sensor_devices):
-    """Collect measurements from all sensors."""
-    measurements = sensors.read_all(sensor_devices)
-    timestamp = utc_timestamp()
-
-    return [
-        create_event(measurement, timestamp)
-        for measurement in measurements
-    ]
 
 
 def publish_pending(client, pending_events):
     """
-    Publish queued events using MQTT QoS 1.
+    Publish pending events using MQTT QoS 1.
 
-    Remove an event only after publish() succeeds.
+    Remove events only after successful publication.
     """
+
     while pending_events:
         event = pending_events[0]
 
@@ -140,53 +141,82 @@ def publish_pending(client, pending_events):
 
 
 def main():
-    """Run the continuous telemetry publisher."""
+    """Run the continuous greenhouse publisher."""
+
     print("Starting greenhouse ESP32...")
 
-    # Initialize physical sensors once.
     sensor_devices = sensors.init_all()
 
+    wlan = None
     client = None
     pending_events = []
+
     last_ntp_sync = None
+    last_sensor_retry = time.ticks_ms()
 
-    # Timestamp of the next sampling cycle.
     next_sample = time.ticks_ms()
-
-    wlan = connect_wifi()
+    next_network_retry = time.ticks_ms()
 
     while True:
         try:
-            # 1. Connect or reconnect Wi-Fi.
-            if not wlan.isconnected():
-                wlan = connect_wifi()
-
-            # 2. Synchronize UTC on startup and periodically.
             now_ms = time.ticks_ms()
 
+            # 1. Retry unavailable sensors independently.
+            if time.ticks_diff(
+                now_ms, last_sensor_retry
+            ) >= SENSOR_RETRY_SECONDS * 1000:
+
+                sensors.retry_failed(sensor_devices)
+                last_sensor_retry = time.ticks_ms()
+
+            # 2. Reconnect network services when needed.
+            if wlan is None or not wlan.isconnected():
+                if time.ticks_diff(
+                    now_ms, next_network_retry
+                ) < 0:
+                    time.sleep_ms(100)
+                    continue
+
+                wlan = connect_wifi()
+                client = None
+
+            # 3. Synchronize UTC on startup and periodically.
             if (
                 last_ntp_sync is None
                 or time.ticks_diff(
-                    now_ms, last_ntp_sync
+                    time.ticks_ms(), last_ntp_sync
                 ) >= NTP_RESYNC_SECONDS * 1000
             ):
-                sync_clock()
-                last_ntp_sync = time.ticks_ms()
+                try:
+                    sync_clock()
+                    last_ntp_sync = time.ticks_ms()
+                except Exception as exc:
+                    print("NTP synchronization failed:", exc)
 
-            # 3. Establish MQTT connection when needed.
+                    # Do not publish with an invalid clock.
+                    if time.gmtime()[0] < 2025:
+                        raise
+
+                    # A previously synchronized clock can
+                    # continue operating until the next retry.
+                    last_ntp_sync = time.ticks_ms()
+
+            # 4. Establish MQTT connection.
             if client is None:
                 client = connect_mqtt()
 
-            # 4. Retry unsent events before sampling again.
+            # 5. Retry pending events before new sampling.
             if pending_events:
                 publish_pending(client, pending_events)
 
-            # 5. Sample at the configured interval.
+            # 6. Collect and publish new measurements.
             now_ms = time.ticks_ms()
 
             if time.ticks_diff(now_ms, next_sample) >= 0:
                 pending_events = collect_events(sensor_devices)
-                publish_pending(client, pending_events)
+
+                if pending_events:
+                    publish_pending(client, pending_events)
 
                 next_sample = time.ticks_add(
                     time.ticks_ms(),
@@ -201,8 +231,8 @@ def main():
 
         except Exception as exc:
             print("Telemetry error:", exc)
-            print("Retrying in", RETRY_SECONDS, "seconds")
 
+            # Disconnect and recreate the MQTT client.
             if client is not None:
                 try:
                     client.disconnect()
@@ -210,7 +240,19 @@ def main():
                     pass
 
             client = None
-            time.sleep(RETRY_SECONDS * 1)
+
+            # Schedule a retry without terminating the loop.
+            next_network_retry = time.ticks_add(
+                time.ticks_ms(),
+                RETRY_SECONDS * 1000,
+            )
+
+            # Mark Wi-Fi unavailable so reconnect is checked.
+            wlan = None
+
+            print("Network retry in", RETRY_SECONDS, "seconds")
+
+            time.sleep_ms(100)
 
     if client is not None:
         try:

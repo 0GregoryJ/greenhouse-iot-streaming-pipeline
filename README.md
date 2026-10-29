@@ -22,9 +22,7 @@
 
 # Greenhouse IoT Streaming Pipeline
 
-An end-to-end streaming pipeline for greenhouse temperature, humidity, atmospheric pressure, and soil moisture. Sensors on an ESP32 publish readings over MQTT to a Raspberry Pi, which validates and buffers them in SQLite before forwarding them to Kafka on AWS. A consumer keeps the latest values in Redis, and FastAPI serves them to a live React dashboard.
-
-The project exists to practice building a reliable data path across constrained edge hardware, an unreliable network, and cloud services: durable buffering, explicit acknowledgments, versioned data contracts, and operational tooling, rather than a demo that only works when nothing fails.
+An end-to-end streaming pipeline for greenhouse temperature, humidity, atmospheric pressure, and soil moisture. Sensors on an ESP32 publish readings over MQTT to a Raspberry Pi, which validates and buffers them in SQLite before forwarding them to Kafka on AWS. A live consumer keeps the latest values in Redis, and FastAPI serves them to a React dashboard, and a historical consumer is planned.
 
 **Live:** [Dashboard](https://greenhouse.gregoryjoshua.com) · [API health](https://api.gregoryjoshua.com/health)
 
@@ -63,7 +61,7 @@ flowchart LR
   class dlq,flink,snow,dbt planned;
 ```
 
-Solid boxes are implemented. Dashed boxes are planned. Details: [Architecture](docs/architecture.md).
+Solid boxes are implemented. Dashed boxes are on the [roadmap](#roadmap). Details: [Architecture](docs/architecture.md).
 
 ## Data flow
 
@@ -78,32 +76,48 @@ Delivery is at-least-once, with deduplication by `event_id`.
 ## What this demonstrates
 
 - **Durable edge buffering.** A SQLite outbox with acknowledge-after-commit ingestion keeps accepted events through Kafka and network outages. Retention cleanup removes only delivered rows.
-- **Delivery semantics.** Persistent QoS 1 sessions, an acknowledged idempotent Kafka producer, manual offset commits, and idempotent Redis updates (a Lua script rejects older timestamps). No exactly-once claim is made.
+- **Delivery semantics.** Persistent QoS 1 sessions, an acknowledged idempotent Kafka producer, manual offset commits, and idempotent Redis updates (a Lua script rejects older timestamps).
 - **Versioned data contracts.** JSON Schema v1 and v2 coexist, and the gateway validates by `schema_version`.
 - **Replayable streaming.** Kafka retains 7 days of events, so other consumer groups can be added.
 - **Operations.** systemd services and timers, Docker Compose, a gateway health check with exit codes, and deployment verification scripts.
+- **Testing and CI/CD.** pytest suites for schemas, ingest, cleanup, health, the live consumer (offset-commit ordering, Redis timestamp guard), and the API against a real Redis. GitHub Actions runs them with a dashboard lint and build, then deploys to the Pi and EC2 over Tailscale and SSH on `main`.
+- **Decision records.** The reasoning behind the main design choices is written down as [ADRs](docs/decisions/README.md).
 - **Networking and security basics.** Tailscale between hosts, authenticated MQTT, loopback-bound API behind Caddy HTTPS, and secrets kept out of Git.
-- **Embedded work.** MicroPython firmware with shared I²C sensors, NTP time sync, and retry logic.
+- **Embedded work.** MicroPython firmware with shared I²C sensors, NTP time sync, per-sensor failure isolation with automatic recovery, and non-blocking network retry.
 
 ## Roadmap
 
-Planned work. None of it exists yet.
+Planned work, grouped by theme. Items are not scheduled.
 
-- **Rejected-event storage.** Persist invalid payloads and validation errors with bounded retention. Today they are logged and dropped.
+**Reliability and hardening**
+
+- **Rejected-event storage.** Persist invalid payloads and validation errors in a dead-letter table with bounded retention and a replay path.
+- **Gateway input hardening.** Handle non-object JSON and malformed `schema_version` values without a process restart, and enforce `uuid` and `date-time` formats at the gateway so it agrees with the consumer's checks.
+- **Firmware.** Socket timeouts so a stalled broker cannot block publishing, a periodic heartbeat with firmware version, optional on-device buffering, and calibrated soil moisture as a new unit.
+- **Kafka.** A multi-broker cluster with replication for high availability and storage-loss protection, and a topic-level retention policy managed as code.
+- **Transport security.** TLS for MQTT and Kafka, and per-device MQTT accounts with topic ACLs.
+- **Redis recovery.** An automated, tested rebuild from Kafka, and expiry for retired sensors.
+
+**Observability**
+
+- **External alerting** for outages and a growing backlog.
+- **Downstream health checks** for Kafka, the consumer, Redis, the API, and the ESP32, plus consumer-lag metrics and an end-to-end synthetic probe.
+- **Centralized, structured logging.**
+
+**CI/CD and infrastructure**
+
+- **Deploy verification and rollback.** Run `verify-deployment.sh` and a data-freshness check after each deploy, and roll back automatically on failure. Deploy tagged container images from a registry.
+- **Safer triggers.** Path filters so documentation-only changes do not redeploy, and environment approvals for production.
+- **Broader deployment.** Pi systemd units, a migration runner for the SQLite database, Kafka host and Caddy configuration, and firmware releases.
+- **Terraform.** EC2 instances, security groups, DNS, and host bootstrap as code.
+- **Configuration as code.** Dashboard API URL from the environment (`VITE_API_URL`) and Netlify settings in the repository.
+
+**Analytics and features**
+
 - **Historical analytics.** A separate Kafka consumer group loading Snowflake, with dbt models and historical dashboard views.
 - **Flink.** Event-time rolling-window metrics, such as 5-minute averages and moisture trends.
-- **Firmware reliability.** Verified unattended boot, disconnected-sensor recovery, bounded network timeouts, and optional on-device buffering.
-- **Testing and monitoring.** Wider automated coverage (ingest, schemas, producer, consumer, API), a tested Redis rebuild procedure, and external alerting.
-- **CI/CD.** GitHub Actions already runs automated tests on every push and pull request. Everything after that is manual: deploying means pulling the latest Git changes on the Raspberry Pi or EC2 hosts and restarting services or containers. The goal is to reduce manual deployments by extending CI/CD beyond testing: automated build and validation, then deployment to the Pi and EC2 services with safeguards (tests as a gate, post-deploy checks) and a defined rollback. The design is not decided, and automated production deployment does not exist today.
-
-## Current limitations
-
-- ESP32 readings can be lost on a reset or while the Pi is unreachable. Durability starts when the Pi commits an event to SQLite.
-- Delivery is at-least-once; duplicates are possible after failures.
-- Kafka is a single broker with replication factor 1, with no high availability.
-- MQTT is authenticated but not encrypted (port 1883). Kafka clients use `PLAINTEXT` inside the Tailscale network.
-- Soil moisture is raw capacitance, not a calibrated percentage.
-- Test coverage is limited to gateway cleanup and health. Deployment is manual.
+- **Dashboard.** Trend charts and per-sensor history.
+- **More sensors.** Additional measurement types (for example light or CO₂) through new schema versions.
 
 ## Documentation
 
@@ -112,9 +126,9 @@ Planned work. None of it exists yet.
 | [Architecture](docs/architecture.md) | Components, event flow, data stores, delivery guarantees |
 | [Data contracts](docs/data-contracts.md) | Schemas, validation points, safe schema evolution |
 | [Adding a sensor](docs/adding-a-sensor.md) | Step-by-step guide and checklist |
-| [Deployment](docs/deployment.md) | Setup, updates, verification, and rollback for each component |
+| [Deployment](docs/deployment.md) | CI/CD, setup, updates, verification, and rollback for each component |
 | [Operations](docs/operations.md) | Health checks, logs, troubleshooting |
-| [Decision records](docs/decisions/README.md) | Placeholder for future ADRs |
+| [Decision records](docs/decisions/README.md) | ADRs for the main design choices |
 | [ESP32 firmware](firmware/esp32/README.md) | Hardware, MicroPython flashing, wiring, configuration |
 | [Infrastructure](infrastructure/README.md) | Component-level infrastructure notes |
 
@@ -131,7 +145,8 @@ consumers/live/      Kafka to Redis consumer
 api/                 FastAPI service
 dashboard/           React / Vite dashboard
 infrastructure/      systemd, Mosquitto, Kafka, Caddy config and scripts
-tests/gateway/       pytest tests
+tests/               pytest suites (schemas, gateway, consumer, API)
+.github/workflows/   CI and deployment workflow
 requirements/        Dependencies per deployment role
 compose.yaml         Consumer, Redis, and API containers
 docs/                Architecture, contracts, deployment, operations

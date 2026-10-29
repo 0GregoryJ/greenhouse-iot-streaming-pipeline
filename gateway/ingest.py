@@ -25,7 +25,11 @@ DB_PATH = ROOT / "gateway" / "data" / "sensor_events.db"
 
 load_dotenv(ROOT / ".env")
 
-MQTT_TOPIC = "greenhouse/telemetry"
+# Ingest runs on the same host as Mosquitto, so it always connects to localhost.
+# Port and topic can be overridden in .env; a blank value uses the default.
+MQTT_HOST = "localhost"
+MQTT_PORT = int(os.getenv("MQTT_PORT") or 1883)
+MQTT_TOPIC = os.getenv("MQTT_TOPIC") or "greenhouse/telemetry"
 
 SCHEMAS = {
         1: json.load(open(ROOT / "schemas" / "sensor_event.v1.schema.json")),
@@ -154,7 +158,7 @@ def main():
     client.on_connect = on_connect
     client.on_message = on_message
 
-    client.connect("localhost", 1883, keepalive=60)
+    client.connect(MQTT_HOST, MQTT_PORT, keepalive=60)
 
     print("Starting SQLite ingestion...")
     client.loop_forever()

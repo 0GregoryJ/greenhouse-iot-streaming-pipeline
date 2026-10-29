@@ -39,6 +39,12 @@ validator = Draft202012Validator(
     format_checker=FormatChecker()
 )
 
+# Simulated events use their own gateway and sensor IDs (the "sim-" prefix) so
+# they never share Redis keys with, or can be mistaken for, real devices.
+SIM_GATEWAY_ID = "sim-gateway-001"
+SIM_SOIL_SENSOR_ID = "sim-soil-001"
+SIM_BME280_SENSOR_ID = "sim-bme280-001"
+
 # Simulated starting conditions
 soil_moisture = 475.0
 air_temperature = 23.0
@@ -50,7 +56,7 @@ def make_event(sensor_id, measurement_type, value, unit, timestamp):
         "schema_version": 1,
         "event_id": str(uuid.uuid4()),
         "sensor_id": sensor_id,
-        "gateway_id": "pi-001",
+        "gateway_id": SIM_GATEWAY_ID,
         "timestamp": timestamp,
         "measurement_type": measurement_type,
         "value": value,
@@ -95,15 +101,15 @@ def main():
             # Events for each measurement
             events = [
                 make_event(
-                    "soil-001", "soil_moisture",
+                    SIM_SOIL_SENSOR_ID, "soil_moisture",
                     round(soil_moisture), "raw_capacitance", timestamp
                 ),
                 make_event(
-                    "bme280-001", "air_temperature",
+                    SIM_BME280_SENSOR_ID, "air_temperature",
                     round(air_temperature, 2), "celsius", timestamp
                 ),
                 make_event(
-                    "bme280-001", "relative_humidity",
+                    SIM_BME280_SENSOR_ID, "relative_humidity",
                     round(relative_humidity, 2), "percent", timestamp
                 )
             ]

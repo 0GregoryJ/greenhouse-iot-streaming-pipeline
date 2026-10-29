@@ -1,0 +1,20 @@
+# /etc/systemd/system/kafka.service
+[Unit]
+Description=Apache Kafka Broker (KRaft)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/kafka
+Environment="KAFKA_HEAP_OPTS=-Xms512m -Xmx512m"
+ExecStart=/home/ubuntu/kafka/bin/kafka-server-start.sh /home/ubuntu/kafka/config/greenhouse.properties
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=120
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
