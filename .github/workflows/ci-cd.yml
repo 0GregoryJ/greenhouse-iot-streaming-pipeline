@@ -211,7 +211,7 @@ jobs:
           git pull --ff-only origin main
 
           docker compose up -d --build --no-deps \
-            live-consumer api
+            live-consumer historical-consumer api
 
           docker compose ps
 

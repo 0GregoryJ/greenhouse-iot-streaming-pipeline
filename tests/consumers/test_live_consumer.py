@@ -273,7 +273,7 @@ def run_one_kafka_message(
     for name, value in {
         "KAFKA_BOOTSTRAP_SERVERS": "test-kafka:9092",
         "KAFKA_TOPIC": "greenhouse.sensor-readings",
-        "KAFKA_CONSUMER_GROUP": "greenhouse-test",
+        "LIVE_KAFKA_CONSUMER_GROUP": "greenhouse-test",
         "REDIS_HOST": "test-redis",
     }.items():
         monkeypatch.setenv(name, value)

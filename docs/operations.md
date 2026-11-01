@@ -26,7 +26,9 @@ Placeholders in angle brackets, such as `<TAILSCALE_IP>`, are values from your e
 | Producer | `systemctl status greenhouse-kafka-producer`, journal | `Batch complete: … acknowledged=N failed=0` |
 | Gateway health | `.venv/bin/python gateway/health.py` | `"status": "healthy"`, exit code 0 |
 | Kafka | `kafka-get-offsets.sh` run twice | End offset increases |
-| Consumer | `sudo docker compose logs --tail 20 live-consumer` | `Processed event=… updated=True` |
+| Live consumer | `sudo docker compose logs --tail 20 live-consumer` | `Processed event=… updated=True` |
+| Historical consumer | `sudo docker compose logs --tail 20 historical-consumer` | `Uploaded N events to s3://…` and `Committed partition=0 next_offset=…` at least every 5 minutes |
+| S3 archive | `aws s3 ls s3://$S3_BUCKET/raw/sensor_events/year=$(date -u +%Y)/month=$(date -u +%m)/day=$(date -u +%d)/ --recursive` | New objects appearing |
 | Redis | `redis-cli --scan` | One key per sensor/measurement |
 | API | `curl -s http://127.0.0.1:8000/health` | `{"status":"ok"}` |
 | Public API | `curl -s https://api.gregoryjoshua.com/health` | `{"status":"ok"}` |
@@ -44,7 +46,8 @@ Placeholders in angle brackets, such as `<TAILSCALE_IP>`, are values from your e
 | Health | `sudo journalctl -u greenhouse-health.service --since "3 minutes ago" -o cat` | JSON output once per minute |
 | Mosquitto | `sudo journalctl -u mosquitto -n 50 --no-pager` | Or `/var/log/mosquitto/`, depending on the Pi's Mosquitto setup |
 | Kafka | `sudo journalctl -u kafka -n 100 --no-pager` | On EC2 #1 |
-| Consumer | `sudo docker compose logs -f live-consumer` | |
+| Live consumer | `sudo docker compose logs -f live-consumer` | |
+| Historical consumer | `sudo docker compose logs -f historical-consumer` | Timestamped logging |
 | API | `sudo docker compose logs -f api` | |
 | Redis | `sudo docker compose logs redis` | |
 | Caddy | `sudo journalctl -u caddy -n 50 --no-pager` | On EC2 #2 |
@@ -70,6 +73,10 @@ Messages worth knowing:
 | Producer | `Producer queue full` | Local librdkafka queue is full; batch ends early |
 | Consumer | `Processed event=… key=… updated=True/False` | `False` means Redis already held a newer timestamp |
 | Consumer | `Skipping malformed event at partition=… offset=…: <error>` | Event skipped; offset committed |
+| Historical | `Uploaded N events to s3://<bucket>/<key>` | Batch written; the key encodes date, topic, partition, and offset range |
+| Historical | `Committed partition=N next_offset=M` | Offsets up to M-1 are durable in S3 |
+| Historical | Traceback ending in `ValueError: Missing required field` or `JSONDecodeError` | A malformed event stopped the consumer; it will restart and hit the same event (see [Historical consumer failures](#historical-consumer-failures)) |
+| Historical | `botocore` `NoCredentialsError` or `AccessDenied` | Instance profile missing, IMDS hop limit too low, or bucket policy; see [Deployment](deployment.md#initial-setup-1) |
 
 ## MQTT
 
@@ -171,12 +178,16 @@ END=$(~/kafka/bin/kafka-get-offsets.sh --bootstrap-server "$KAFKA_BOOTSTRAP_SERV
   --max-messages 5 --timeout-ms 10000 --property print.key=true
 ```
 
-Consumer lag for the live consumer. The default group is `greenhouse-live-dev`; confirm with `sudo docker compose exec live-consumer printenv KAFKA_CONSUMER_GROUP` on the serving host:
+Consumer lag. The default groups are `greenhouse-live-dev` (live) and `greenhouse-historical` (archive); confirm with `sudo docker compose exec live-consumer printenv LIVE_KAFKA_CONSUMER_GROUP` and `sudo docker compose exec historical-consumer printenv HISTORICAL_KAFKA_CONSUMER_GROUP` on the serving host:
 
 ```bash
 ~/kafka/bin/kafka-consumer-groups.sh --bootstrap-server "$KAFKA_BOOTSTRAP_SERVERS" \
   --describe --group greenhouse-live-dev
+~/kafka/bin/kafka-consumer-groups.sh --bootstrap-server "$KAFKA_BOOTSTRAP_SERVERS" \
+  --describe --group greenhouse-historical
 ```
+
+The historical group's lag is expected to sit anywhere up to one batch (240 events, or 5 minutes of traffic) because it commits per upload, not per event.
 
 Broker health: `sudo systemctl status kafka`, `df -h /home/ubuntu/kafka-data`, and `tailscale status`. The producer's own view is in its journal (`Batch complete: … acknowledged=…`).
 
@@ -360,7 +371,7 @@ sudo docker compose logs --tail 100 live-consumer
 
 Check lag with `kafka-consumer-groups.sh` (above). Lag near 0 and rising offsets mean the consumer is keeping up.
 
-**Redis recovery.** Redis is a derived view. Start a consumer with a new `KAFKA_CONSUMER_GROUP` (set in `.env`, then `sudo docker compose up -d`); `auto.offset.reset=earliest` replays the retained 168 h. Alternatively, reset the group's offsets with `kafka-consumer-groups.sh --reset-offsets`.
+**Redis recovery.** Redis is a derived view. Start a consumer with a new `LIVE_KAFKA_CONSUMER_GROUP` (set in `.env`, then `sudo docker compose up -d`); `auto.offset.reset=earliest` replays the retained 168 h. Alternatively, reset the group's offsets with `kafka-consumer-groups.sh --reset-offsets`.
 
 ### 5. Redis has data but the API or dashboard is empty or stale
 
@@ -435,6 +446,26 @@ df -h gateway/data
 | Malformed event | Logged and skipped; offset committed | Find the source event; see [Data contracts](data-contracts.md#how-invalid-events-are-handled) |
 | Crash loop | `RestartCount` rises: `sudo docker inspect -f '{{.RestartCount}}' $(sudo docker compose ps -q live-consumer)` | Read `docker compose logs live-consumer` for the traceback |
 | Missing `KAFKA_BOOTSTRAP_SERVERS` | `docker compose` refuses to start (`Kafka address required`) | Set it in `.env` |
+
+### Historical consumer failures
+
+On the serving host:
+
+```bash
+sudo docker compose ps historical-consumer
+sudo docker compose logs --tail 100 historical-consumer
+```
+
+| Observation | Cause and action |
+| --- | --- |
+| No `Uploaded` line for more than 5 minutes while Kafka offsets rise | Consumer cannot reach Kafka or S3. Check Tailscale and the log for `botocore` errors |
+| `NoCredentialsError`, or the container restarts at its first upload | No AWS credentials in the container. Attach an instance profile and set the IMDSv2 hop limit to 2 ([Deployment](deployment.md#initial-setup-1)) |
+| `AccessDenied` on `PutObject` | The instance role lacks `s3:PutObject` on `raw/sensor_events/*`, or the bucket policy denies it |
+| Restart loop with `ValueError: Missing required field` or `JSONDecodeError` | A message in the topic is not a valid event. The consumer does not skip it, so it stops at that offset on every restart. Inspect the offset with `kafka-console-consumer.sh --partition 0 --offset <n> --max-messages 1`, then either fix the consumer to quarantine it or advance the group's offset past it with `kafka-consumer-groups.sh --reset-offsets --to-offset <n+1> --group greenhouse-historical --topic greenhouse.sensor-readings --execute` (while the consumer is stopped) |
+| Duplicate events across objects | Expected after a restart between upload and commit. Deduplicate on `event_id` when loading downstream |
+| `docker compose stop` takes up to 60 s | The consumer flushes pending batches before exiting (`stop_grace_period`) |
+
+A full re-archive is possible by starting the consumer under a new `HISTORICAL_KAFKA_CONSUMER_GROUP`; it replays the retained 168 h into new objects.
 
 ### Stale dashboard readings
 

@@ -28,7 +28,7 @@ services:
     environment:
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:?Kafka address required}
       KAFKA_TOPIC: ${KAFKA_TOPIC:-greenhouse.sensor-readings}
-      KAFKA_CONSUMER_GROUP: ${KAFKA_CONSUMER_GROUP:-greenhouse-live-dev}
+      LIVE_KAFKA_CONSUMER_GROUP: ${LIVE_KAFKA_CONSUMER_GROUP:-greenhouse-live-dev}
       REDIS_HOST: redis
 
   api:
@@ -51,6 +51,28 @@ services:
       # Expose the API to your MacBook, not the entire network.
       # On EC2, an HTTPS reverse proxy will connect locally.
       - "127.0.0.1:8000:8000"
+
+  historical-consumer:
+    build:
+      context: .
+      dockerfile: consumers/historical/dockerfile
+
+    restart: unless-stopped
+
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS:?Kafka address required}
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-greenhouse.sensor-readings}
+      HISTORICAL_KAFKA_CONSUMER_GROUP: ${HISTORICAL_KAFKA_CONSUMER_GROUP:-greenhouse-historical}
+
+      S3_BUCKET: ${S3_BUCKET:?S3 bucket required}
+      S3_PREFIX: ${S3_PREFIX:-raw/sensor_events}
+      AWS_DEFAULT_REGION: ${AWS_REGION:-us-east-2}
+
+      HISTORICAL_BATCH_SIZE: ${HISTORICAL_BATCH_SIZE:-240}
+      HISTORICAL_FLUSH_SECONDS: ${HISTORICAL_FLUSH_SECONDS:-300}
+
+    # Allow pending batches to upload and commit on shutdown.
+    stop_grace_period: 60s
 
 volumes:
   redis_data:

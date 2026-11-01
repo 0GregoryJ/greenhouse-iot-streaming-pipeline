@@ -9,13 +9,13 @@ The Pi should publish to one durable log, and several independent readers should
 
 ## Decision
 
-Run one Apache Kafka broker on a dedicated EC2 instance (`t3.small`) in KRaft mode, with the broker and controller roles combined (`process.roles=broker,controller`, node ID 1). It is managed by systemd ([`kafka.service`](../../infrastructure/systemd/kafka.service)) with a 512 MB heap. Configuration is a properties template ([`greenhouse.properties.example`](../../infrastructure/kafka/greenhouse.properties.example)).
+Run one Apache Kafka broker on a dedicated EC2 instance (`t3.small`) in KRaft mode, with the broker and controller roles combined (`process.roles=broker,controller`, node ID 1). It is managed by systemd ([`kafka.service`](../../infrastructure/systemd/kafka_EC2/kafka.service)) with a 512 MB heap. Configuration is a properties template ([`greenhouse.properties.example`](../../infrastructure/kafka/greenhouse.properties.example)).
 
 The topic is `greenhouse.sensor-readings`, with one partition, replication factor 1, and 168 h retention. The broker listens on a Tailscale address ([ADR 0008](0008-tailscale-for-private-connectivity.md)). The message key is `event_id`.
 
 ## Consequences
 
-- The live consumer and future consumer groups read the same retained events independently. Changing the live consumer's group name replays the topic into Redis.
+- The live and historical consumer groups read the same retained events independently ([ADR 0012](0012-historical-archive-to-s3.md)). Changing the live consumer's group name replays the topic into Redis.
 - KRaft removes a separate ZooKeeper service, which suits a small instance.
 - One partition gives a total order in arrival sequence and simple offset handling.
 - One broker with replication factor 1 means the broker's disk holds the only copy of Kafka data. Events younger than 24 hours after acknowledgment also remain in the Pi's SQLite database. A multi-broker cluster is on the [roadmap](../../README.md#roadmap).

@@ -17,6 +17,7 @@ Architecture Decision Records (ADRs) capture a significant architectural decisio
 | [0009](0009-github-actions-deployment-over-tailscale-and-ssh.md) | GitHub Actions deployment over Tailscale and SSH | Accepted |
 | [0010](0010-per-sensor-failure-isolation-in-firmware.md) | Per-sensor failure isolation and non-blocking retry in the firmware | Accepted |
 | [0011](0011-dashboard-polls-a-read-only-api.md) | Dashboard polls a read-only API | Accepted |
+| [0012](0012-historical-archive-to-s3.md) | Historical archive as gzip JSON Lines batches in S3 | Accepted |
 
 ## Format
 

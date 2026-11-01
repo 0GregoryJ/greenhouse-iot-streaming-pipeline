@@ -12,7 +12,7 @@ Deployments were manual: SSH to a host, `git pull`, restart services or rebuild 
 One workflow ([`.github/workflows/ci-cd.yml`](../../.github/workflows/ci-cd.yml)) runs on every push and pull request: the pytest suite with a Redis service, and the dashboard lint and build. On a push to `main`, after both pass, two deploy jobs run in the `production` environment:
 
 - **Pi.** Join Tailscale as an ephemeral node tagged `tag:ci` (OAuth client and OIDC audience), SSH with a deploy key and a pinned `known_hosts`, then `git pull --ff-only`, install `requirements/gateway.txt`, restart `greenhouse-ingest` and `greenhouse-kafka-producer`, and check that both are active.
-- **Serving host.** The same connection, then `git pull --ff-only`, `docker compose up -d --build --no-deps live-consumer api`, `docker compose ps`, and a `/health` check on `127.0.0.1:8000`.
+- **Serving host.** The same connection, then `git pull --ff-only`, `docker compose up -d --build --no-deps live-consumer historical-consumer api`, `docker compose ps`, and a `/health` poll on `127.0.0.1:8000` (20 attempts, 3 s apart).
 
 Each host has its own concurrency group so deploys queue instead of overlapping. Secrets and variables are GitHub environment settings; no values are in the repository.
 

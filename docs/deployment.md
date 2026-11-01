@@ -10,9 +10,9 @@ Related documents: [Architecture](architecture.md) · [Operations](operations.md
 | --- | --- |
 | Tests and dashboard lint/build | GitHub Actions on every push and pull request ([`ci-cd.yml`](../.github/workflows/ci-cd.yml)) |
 | Pi gateway services (ingest, producer) | GitHub Actions on push to `main`: pull, install requirements, restart, check `is-active` |
-| Serving host (live consumer, API) | GitHub Actions on push to `main`: pull, rebuild and recreate the two containers, check `/health` |
-| Pi systemd units | [`install-pi-services.sh`](../infrastructure/scripts/install-pi-services.sh), run by hand when a unit file changes |
-| Kafka host | By hand: [`kafka.service`](../infrastructure/systemd/kafka.service) and the properties file |
+| Serving host (live consumer, historical consumer, API) | GitHub Actions on push to `main`: pull, rebuild and recreate the three containers, check `/health` |
+| Pi systemd units | [`install-pi-services.sh`](../infrastructure/scripts/install-pi-services.sh) (from `infrastructure/systemd/raspberry_pi/`), run by hand when a unit file changes |
+| Kafka host | By hand: [`kafka.service`](../infrastructure/systemd/kafka_EC2/kafka.service) and the properties file |
 | Redis service, Caddy, Mosquitto | By hand |
 | Dashboard | Git-based deployment by Netlify |
 | ESP32 firmware | `mpremote` over USB from a Mac |
@@ -27,7 +27,7 @@ Related documents: [Architecture](architecture.md) · [Operations](operations.md
 | `python-tests` | Every push and pull request | Python 3.12, a `redis:7-alpine` service, `TEST_REDIS_URL=redis://localhost:6379/15`, then `python -m pytest tests/ -v` |
 | `dashboard` | Every push and pull request | Node 22 in `dashboard/`: `npm ci`, `npm run lint`, `npm run build` |
 | `deploy-pi` | Push to `main`, after `python-tests` and `dashboard` pass | Deploys the gateway services to the Raspberry Pi |
-| `deploy-serving-ec2` | Push to `main`, after `python-tests` and `dashboard` pass | Deploys the live consumer and API to the serving host |
+| `deploy-serving-ec2` | Push to `main`, after `python-tests` and `dashboard` pass | Deploys the live consumer, historical consumer, and API to the serving host |
 
 Both deploy jobs use the GitHub environment `production` and a concurrency group (`greenhouse-pi-deployment`, `greenhouse-serving-deployment`) with `cancel-in-progress: false`, so a second deploy for the same host queues behind the first. The two jobs run in parallel with each other.
 
@@ -47,9 +47,9 @@ The cleanup and health timers run `gateway/cleanup.py` and `gateway/health.py` f
 **Serving host (`deploy-serving-ec2`)**, as the configured user in `~/greenhouse-iot-streaming-pipeline`:
 
 1. `git pull --ff-only origin main`
-2. `docker compose up -d --build --no-deps live-consumer api`
+2. `docker compose up -d --build --no-deps live-consumer historical-consumer api`
 3. `docker compose ps`
-4. `curl --fail --retry 5 --retry-delay 2 http://127.0.0.1:8000/health`
+4. Poll `http://127.0.0.1:8000/health` up to 20 times, 3 s apart; on failure, print the API logs and fail the job
 
 Redis is not rebuilt or restarted by this job, and Caddy is not touched.
 
@@ -72,7 +72,7 @@ The workflow expects the following on the targets:
 | --- | --- |
 | Tailnet | The ACLs allow `tag:ci` to reach SSH on the Pi and the serving host |
 | Pi | User `greenhousepi`, the repository at the path above with `.venv`, and passwordless sudo for `systemctl restart` and `systemctl is-active` on the two services |
-| Serving host | The repository at `~/greenhouse-iot-streaming-pipeline` with its `.env`, and a deploy user that can run `docker compose` without `sudo` |
+| Serving host | The repository at `~/greenhouse-iot-streaming-pipeline` with its `.env` (including `S3_BUCKET`), a deploy user that can run `docker compose` without `sudo`, and an instance profile that allows `s3:PutObject` on the bucket |
 | Both | A clone on `main` that can fast-forward from `origin` |
 
 ### What is not deployed by CI
@@ -107,9 +107,10 @@ docker stop greenhouse-test-redis
 | --- | --- | --- | --- |
 | Firmware | ESP32 Feather V2 | `mpremote` copy; MicroPython runs `main.py` at boot | [`firmware/esp32/`](../firmware/esp32/) |
 | Mosquitto | Raspberry Pi Zero 2 W | systemd (`mosquitto`) | [`infrastructure/mosquitto/greenhouse.conf`](../infrastructure/mosquitto/greenhouse.conf) |
-| Ingest, producer, cleanup, health | Raspberry Pi | systemd | [`gateway/`](../gateway/), [`infrastructure/systemd/`](../infrastructure/systemd/) |
-| Kafka | EC2 #1 (`t3.small`) | systemd (`kafka`) | [`infrastructure/kafka/greenhouse.properties.example`](../infrastructure/kafka/greenhouse.properties.example), [`infrastructure/systemd/kafka.service`](../infrastructure/systemd/kafka.service) |
-| Consumer, Redis, API | EC2 #2 (`t4g.small`) | Docker Compose | [`compose.yaml`](../compose.yaml) |
+| Ingest, producer, cleanup, health | Raspberry Pi | systemd | [`gateway/`](../gateway/), [`infrastructure/systemd/raspberry_pi/`](../infrastructure/systemd/raspberry_pi/) |
+| Kafka | EC2 #1 (`t3.small`) | systemd (`kafka`) | [`infrastructure/kafka/greenhouse.properties.example`](../infrastructure/kafka/greenhouse.properties.example), [`infrastructure/systemd/kafka_EC2/kafka.service`](../infrastructure/systemd/kafka_EC2/kafka.service) |
+| Live consumer, historical consumer, Redis, API | EC2 #2 (`t4g.small`) | Docker Compose | [`compose.yaml`](../compose.yaml) |
+| S3 bucket (historical archive) | AWS | Console or CLI; name in `.env` | n/a |
 | Caddy | EC2 #2 | systemd (`caddy`) | [`infrastructure/caddy/caddyfile`](../infrastructure/caddy/caddyfile) (template) |
 | Dashboard | Netlify | Git push | [`dashboard/`](../dashboard/) |
 | Simulator | Mac (optional) | Run by hand | [`sensor_simulator/simulate.py`](../sensor_simulator/simulate.py) |
@@ -123,7 +124,7 @@ No secret values are committed. `.env` and `firmware/esp32/config.py` are git-ig
 | Location | Used by | Contents |
 | --- | --- | --- |
 | `.env` on the Pi (from [`.env.example`](../.env.example)) | `ingest.py`, `kafka_producer.py` | `MQTT_USERNAME`, `MQTT_PASSWORD`, `KAFKA_BOOTSTRAP_SERVERS`, and optional `MQTT_PORT`, `MQTT_TOPIC`, `KAFKA_TOPIC`, `KAFKA_BATCH_SIZE`, `KAFKA_RETRY_SECONDS`, `KAFKA_DELIVERY_TIMEOUT_MS` |
-| `.env` on the serving host | `compose.yaml` | `KAFKA_BOOTSTRAP_SERVERS` (required), `KAFKA_TOPIC` (default `greenhouse.sensor-readings`), `KAFKA_CONSUMER_GROUP` (default `greenhouse-live-dev`), `CORS_ORIGINS` (default `http://localhost:5173`; include the dashboard origin in production) |
+| `.env` on the serving host | `compose.yaml` | `KAFKA_BOOTSTRAP_SERVERS` and `S3_BUCKET` (required); `KAFKA_TOPIC` (default `greenhouse.sensor-readings`), `LIVE_KAFKA_CONSUMER_GROUP` (`greenhouse-live-dev`), `HISTORICAL_KAFKA_CONSUMER_GROUP` (`greenhouse-historical`), `HISTORICAL_BATCH_SIZE` (240), `HISTORICAL_FLUSH_SECONDS` (300), `S3_PREFIX` (`raw/sensor_events`), `AWS_REGION` (`us-east-2`), `CORS_ORIGINS` (default `http://localhost:5173`; include the dashboard origin in production) |
 | `.env` on a Mac | `simulate.py` | `MQTT_HOST`, `MQTT_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD`, `MQTT_TOPIC` |
 | `/etc/mosquitto/passwd` on the Pi | Mosquitto | Password hashes, created with `mosquitto_passwd` |
 | `firmware/esp32/config.py` (from `config.example.py`) | ESP32 | Wi-Fi and MQTT credentials, Pi LAN address, `GATEWAY_ID`, sensor IDs, sample interval |
@@ -134,7 +135,7 @@ No secret values are committed. `.env` and `firmware/esp32/config.py` are git-ig
 Notes:
 
 - `ingest.py` runs beside Mosquitto and always connects to `localhost`. It reads `MQTT_USERNAME`, `MQTT_PASSWORD`, `MQTT_PORT` (default 1883), and `MQTT_TOPIC` (default `greenhouse/telemetry`); a blank value uses the default. `MQTT_HOST` is used by the simulator only.
-- `.env.example` pre-fills the application defaults (topic, consumer group, batch size, retry interval, CORS origin, MQTT topic). Credentials, `MQTT_HOST`, and `KAFKA_BOOTSTRAP_SERVERS` are blank and need values. A blank value counts as set, so delete a line rather than leaving it empty (`KAFKA_BATCH_SIZE=` fails integer parsing).
+- `.env.example` is grouped by host and pre-fills the application defaults (topics, consumer groups, batch sizes, flush interval, S3 prefix, region, CORS origin). Credentials, `MQTT_HOST`, `KAFKA_BOOTSTRAP_SERVERS`, and `S3_BUCKET` are blank and need values on the hosts that use them. A blank value counts as set, so delete a line rather than leaving it empty (`KAFKA_BATCH_SIZE=` fails integer parsing).
 - `.env` is read when a process starts. After editing it, restart the service (`systemctl restart …`) or recreate containers (`docker compose up -d`).
 - Mosquitto uses one password file; a separate account per device keeps credentials individually revocable.
 - `chmod 600 .env` restricts the file to its owner.
@@ -169,7 +170,7 @@ For CI deploys, also grant the deploy user passwordless sudo for the restart and
 sudo bash infrastructure/scripts/install-pi-services.sh
 ```
 
-The script requires root and the `greenhousepi` user, runs `systemd-analyze verify` on the six units, installs them to `/etc/systemd/system/`, and runs `daemon-reload`. It does not enable or restart anything. Then:
+The script requires root and the `greenhousepi` user, runs `systemd-analyze verify` on the six units in `infrastructure/systemd/raspberry_pi/`, installs them to `/etc/systemd/system/`, and runs `daemon-reload`. It does not enable or restart anything. Then:
 
 ```bash
 sudo systemctl enable --now greenhouse-cleanup.timer
@@ -206,7 +207,7 @@ git pull --ff-only origin main
 sudo systemctl restart greenhouse-ingest              # ingest.py or schemas/ changed
 sudo systemctl restart greenhouse-kafka-producer      # kafka_producer.py or .env changed
 
-# Only if infrastructure/systemd/ changed
+# Only if infrastructure/systemd/raspberry_pi/ changed
 sudo bash infrastructure/scripts/install-pi-services.sh
 
 bash infrastructure/scripts/verify-deployment.sh pi
@@ -232,7 +233,7 @@ Run `git checkout main` afterwards so the next deploy can fast-forward. The SQLi
 
 Single-node KRaft broker, node ID 1, listener on a Tailscale address (port 9092), controller on `127.0.0.1:9093`, data in `/home/ubuntu/kafka-data`, 1 partition and replication factor 1 by default, 168 h retention. The template is [`greenhouse.properties.example`](../infrastructure/kafka/greenhouse.properties.example); the deployed file is `/home/ubuntu/kafka/config/greenhouse.properties`.
 
-The service unit is [`infrastructure/systemd/kafka.service`](../infrastructure/systemd/kafka.service): user `ubuntu`, working directory `/home/ubuntu/kafka`, `KAFKA_HEAP_OPTS=-Xms512m -Xmx512m`, `Restart=on-failure` with `RestartSec=10`, `TimeoutStopSec=120`, and `LimitNOFILE=65536`.
+The service unit is [`infrastructure/systemd/kafka_EC2/kafka.service`](../infrastructure/systemd/kafka_EC2/kafka.service): user `ubuntu`, working directory `/home/ubuntu/kafka`, `KAFKA_HEAP_OPTS=-Xms512m -Xmx512m`, `Restart=on-failure` with `RestartSec=10`, `TimeoutStopSec=120`, and `LimitNOFILE=65536`.
 
 ### Initial setup
 
@@ -246,7 +247,7 @@ nano config/greenhouse.properties                         # replace <TAILSCALE_I
 KAFKA_CLUSTER_ID=$(bin/kafka-storage.sh random-uuid)
 bin/kafka-storage.sh format -t "$KAFKA_CLUSTER_ID" -c config/greenhouse.properties
 
-sudo cp ~/greenhouse-iot-streaming-pipeline/infrastructure/systemd/kafka.service /etc/systemd/system/kafka.service
+sudo cp ~/greenhouse-iot-streaming-pipeline/infrastructure/systemd/kafka_EC2/kafka.service /etc/systemd/system/kafka.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now kafka
 ```
@@ -277,23 +278,23 @@ bash infrastructure/scripts/verify-deployment.sh kafka
 
 ## Serving host (EC2 #2)
 
-Docker Compose runs `redis` (`redis:7-alpine`, AOF persistence, volume `redis_data`), `live-consumer`, and `api` (published only on `127.0.0.1:8000`). All three use `restart: unless-stopped`. Caddy runs on the host under systemd.
+Docker Compose runs `redis` (`redis:7-alpine`, AOF persistence, volume `redis_data`), `live-consumer`, `historical-consumer`, and `api` (published only on `127.0.0.1:8000`). All four use `restart: unless-stopped`; the historical consumer has a 60 s `stop_grace_period` so it can upload and commit pending batches on shutdown. Caddy runs on the host under systemd.
 
 ### Initial setup
 
-Requirements: Docker with Compose, Tailscale (the consumer reaches Kafka over it), Caddy, a DNS name for the API, and ports 80 and 443 open publicly. For CI deploys, the deploy user must be able to run `docker compose` without `sudo` (for example by membership in the `docker` group).
+Requirements: Docker with Compose, Tailscale (the consumers reach Kafka over it), Caddy, a DNS name for the API, ports 80 and 443 open publicly, an S3 bucket, and an IAM instance profile on the instance that allows `s3:PutObject` on `arn:aws:s3:::<bucket>/raw/sensor_events/*`. The historical consumer obtains credentials from the instance metadata service inside its container. With IMDSv2 this needs the instance's metadata hop limit set to 2 (`aws ec2 modify-instance-metadata-options --instance-id <id> --http-put-response-hop-limit 2`), because Docker's bridge network adds a network hop. For CI deploys, the deploy user must be able to run `docker compose` without `sudo` (for example by membership in the `docker` group).
 
 ```bash
 git clone https://github.com/0GregoryJ/greenhouse-iot-streaming-pipeline.git
 cd greenhouse-iot-streaming-pipeline
-cp .env.example .env      # set KAFKA_BOOTSTRAP_SERVERS, KAFKA_TOPIC, KAFKA_CONSUMER_GROUP, CORS_ORIGINS
+cp .env.example .env      # set KAFKA_BOOTSTRAP_SERVERS, S3_BUCKET, AWS_REGION, CORS_ORIGINS
 sudo docker compose config --quiet
 sudo docker compose up -d --build
 ```
 
 ### Updating containers
 
-A merge to `main` rebuilds and recreates `live-consumer` and `api` through the `deploy-serving-ec2` job. The manual equivalent, which also applies changes to the whole stack (for example the Redis service definition):
+A merge to `main` rebuilds and recreates `live-consumer`, `historical-consumer`, and `api` through the `deploy-serving-ec2` job. The manual equivalent, which also applies changes to the whole stack (for example the Redis service definition):
 
 ```bash
 cd <repository root>
@@ -401,7 +402,7 @@ The IDs are the constants `SIM_GATEWAY_ID`, `SIM_SOIL_SENSOR_ID`, and `SIM_BME28
 | `greenhouse-cleanup.service`, `greenhouse-cleanup.timer` | Pi | Hourly retention cleanup |
 | `greenhouse-health.service`, `greenhouse-health.timer` | Pi | Health check every minute |
 | `tailscaled.service` | Pi, both EC2 hosts | Private network (the producer unit orders after it; `verify-deployment.sh kafka` checks it) |
-| `kafka.service` | EC2 #1 | Kafka broker ([`kafka.service`](../infrastructure/systemd/kafka.service)) |
+| `kafka.service` | EC2 #1 | Kafka broker ([`kafka_EC2/kafka.service`](../infrastructure/systemd/kafka_EC2/kafka.service)) |
 | `caddy.service` | EC2 #2 | HTTPS reverse proxy |
 
 ## Verification
@@ -440,6 +441,7 @@ Keep support for an old schema version until no device emits it and queued or ou
 | Pi services | Revert on `main` (CI redeploys), or check out the previous commit and restart |
 | Kafka config | Restore the previous properties file, restart |
 | Containers | Revert on `main`, or check out the previous commit and `docker compose up -d --build` |
+| S3 archive | Not rolled back; objects are written once per offset range. A replay under a new `HISTORICAL_KAFKA_CONSUMER_GROUP` adds objects |
 | Dashboard | Revert and push, or select a prior Netlify deploy |
 | Firmware | Copy older files from Git, reset |
 | Redis state | Rebuild from Kafka by changing the consumer group (limited to Kafka retention) |

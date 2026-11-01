@@ -1,5 +1,5 @@
-
-"""Maintain the latest greenhouse sensor readings in Redis.
+"""
+Maintain the latest greenhouse sensor readings in Redis.
 
 Kafka remains the source of the event stream.
 Redis serves as a low-latency, rebuildable materialized view.
@@ -132,7 +132,7 @@ def main():
     kafka_servers = os.environ["KAFKA_BOOTSTRAP_SERVERS"]
     kafka_topic = os.environ["KAFKA_TOPIC"]
     redis_host = os.environ["REDIS_HOST"]
-    consumer_group = os.environ["KAFKA_CONSUMER_GROUP"]
+    consumer_group = os.environ["LIVE_KAFKA_CONSUMER_GROUP"]
 
     redis_client = redis.Redis(
         host=redis_host,

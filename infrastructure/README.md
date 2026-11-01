@@ -39,6 +39,7 @@ ESP32 Sensors / Python Simulator
        AWS EC2 #2
      +----------------------+
      | Kafka Live Consumer  |
+     | Historical Consumer  |
      | Redis                |
      | FastAPI              |
      | Caddy (HTTPS)        |
@@ -48,6 +49,8 @@ ESP32 Sensors / Python Simulator
               |
               v
       Netlify React Dashboard
+
+(The historical consumer also writes to an S3 bucket.)
 ```
 
 The Raspberry Pi provides durable local event buffering, Kafka decouples event production from consumption, and Redis maintains the latest sensor state for low-latency dashboard access.
@@ -63,20 +66,22 @@ infrastructure/
 ├── mosquitto/
 │   └── greenhouse.conf
 ├── systemd/
-│   ├── greenhouse-ingest.service
-│   ├── greenhouse-kafka-producer.service
-│   ├── greenhouse-cleanup.service
-│   ├── greenhouse-cleanup.timer
-│   ├── greenhouse-health.service
-│   ├── greenhouse-health.timer
-│   └── kafka.service
+│   ├── raspberry_pi/
+│   │   ├── greenhouse-ingest.service
+│   │   ├── greenhouse-kafka-producer.service
+│   │   ├── greenhouse-cleanup.service
+│   │   ├── greenhouse-cleanup.timer
+│   │   ├── greenhouse-health.service
+│   │   └── greenhouse-health.timer
+│   └── kafka_EC2/
+│       └── kafka.service
 ├── scripts/
 │   ├── install-pi-services.sh
 │   └── verify-deployment.sh
 └── README.md
 ```
 
-The Pi units are installed by `scripts/install-pi-services.sh`. `kafka.service` runs on EC2 #1 and is installed by hand. Caddy's template is named `caddyfile` here and is deployed as `/etc/caddy/Caddyfile`.
+Unit files are grouped by the host they run on. The Pi units in `systemd/raspberry_pi/` are installed by `scripts/install-pi-services.sh`; `systemd/kafka_EC2/kafka.service` runs on EC2 #1 and is installed by hand. Caddy's template is named `caddyfile` here and is deployed as `/etc/caddy/Caddyfile`.
 
 ## Deployment Environments
 
@@ -84,7 +89,8 @@ The Pi units are installed by `scripts/install-pi-services.sh`. `kafka.service` 
 |---|---|---|
 | Raspberry Pi Zero 2 W | Mosquitto, MQTT ingestion, SQLite, Kafka producer | systemd |
 | AWS EC2 #1 (`t3.small`) | Apache Kafka broker | systemd |
-| AWS EC2 #2 (`t4g.small`) | Kafka consumer, Redis, FastAPI | Docker Compose |
+| AWS EC2 #2 (`t4g.small`) | Live consumer, historical consumer, Redis, FastAPI | Docker Compose |
+| AWS S3 | Historical event archive | Bucket and IAM instance profile |
 | AWS EC2 #2 | Caddy reverse proxy | systemd |
 | Netlify | React/Vite dashboard | Git-based deployment |
 
@@ -205,10 +211,10 @@ The topic uses a single partition and replication factor one.
 
 ### Service Management
 
-The broker runs as the systemd unit [`systemd/kafka.service`](systemd/kafka.service), installed as `/etc/systemd/system/kafka.service` (user `ubuntu`, 512 MB heap, `Restart=on-failure`):
+The broker runs as the systemd unit [`systemd/kafka_EC2/kafka.service`](systemd/kafka_EC2/kafka.service), installed as `/etc/systemd/system/kafka.service` (user `ubuntu`, 512 MB heap, `Restart=on-failure`):
 
 ```bash
-sudo cp infrastructure/systemd/kafka.service /etc/systemd/system/kafka.service
+sudo cp infrastructure/systemd/kafka_EC2/kafka.service /etc/systemd/system/kafka.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now kafka
 ```
@@ -234,11 +240,12 @@ bash infrastructure/scripts/verify-deployment.sh kafka
 
 ## 3. Live Backend — AWS EC2 #2
 
-The live backend consists of three Docker Compose services.
+The live backend consists of four Docker Compose services.
 
 | Service | Responsibility |
 |---|---|
 | `live-consumer` | Consume Kafka telemetry and update Redis |
+| `historical-consumer` | Consume Kafka telemetry in its own group and archive gzip JSON Lines batches to S3 |
 | `redis` | Store the latest measurement per sensor and measurement type |
 | `api` | Expose read-only FastAPI endpoints |
 
@@ -248,7 +255,7 @@ Docker Compose configuration is maintained at the repository root:
 
 ### Deployment
 
-A merge to `main` rebuilds and recreates `live-consumer` and `api` through GitHub Actions. To deploy the whole stack by hand, run from the repository root on EC2 #2:
+A merge to `main` rebuilds and recreates `live-consumer`, `historical-consumer`, and `api` through GitHub Actions. To deploy the whole stack by hand, run from the repository root on EC2 #2:
 
 ```bash
 sudo docker compose config
@@ -260,8 +267,13 @@ sudo docker compose ps
 
 ```bash
 sudo docker compose logs -f live-consumer
+sudo docker compose logs -f historical-consumer
 sudo docker compose logs -f api
 ```
+
+### S3 Access
+
+The historical consumer uses the EC2 instance profile for AWS credentials; no keys are stored in `.env`. The role needs `s3:PutObject` on the bucket's `raw/sensor_events/*` prefix, and the instance's IMDSv2 hop limit must be 2 so containers on Docker's bridge network can reach the metadata service.
 
 ### API Verification
 
@@ -354,6 +366,7 @@ The deployment uses Tailscale for private connectivity between the gateway and K
 | 6379 | Redis | Internal Docker network |
 | 8000 | FastAPI | Localhost |
 | 443 | Caddy HTTPS | Public |
+| 443 (outbound) | Amazon S3 | From EC2 #2 via the instance profile |
 | 80 | Caddy HTTP / certificate validation | Public |
 | 22 | SSH | Restricted administration |
 
@@ -407,6 +420,7 @@ Redis holds a derived latest-state view. To rebuild it, replay Kafka with a new 
 | Kafka producer | `journalctl -u greenhouse-kafka-producer -f` |
 | Kafka broker | `journalctl -u kafka -f` |
 | Live consumer | `docker compose logs -f live-consumer` |
+| Historical consumer | `docker compose logs -f historical-consumer` |
 | FastAPI | `docker compose logs -f api` |
 | Caddy | `journalctl -u caddy -f` |
 
@@ -418,7 +432,7 @@ Infrastructure and application changes follow this process:
 2. Run relevant local tests (`python -m pytest tests/`).
 3. Push to GitHub; Actions runs the pytest suite and the dashboard lint and build.
 4. Review and merge to `main`.
-5. On `main`, GitHub Actions deploys over Tailscale and SSH: the Pi's ingest and producer services are restarted, and the serving host's `live-consumer` and `api` containers are rebuilt.
+5. On `main`, GitHub Actions deploys over Tailscale and SSH: the Pi's ingest and producer services are restarted, and the serving host's `live-consumer`, `historical-consumer`, and `api` containers are rebuilt.
 6. Apply what CI does not deploy by hand: Pi systemd units, the SQLite migration, Kafka host changes, Caddy, and the ESP32 firmware (see [`docs/deployment.md`](../docs/deployment.md)).
 7. Run the corresponding deployment verification script.
 8. Confirm service health and data freshness.

@@ -35,6 +35,7 @@ flowchart TB
   subgraph ec2b["EC2 #2 · t4g.small"]
     subgraph compose["Docker Compose"]
       consumer["live-consumer"]
+      hist["historical-consumer"]
       redis[("Redis<br/>latest state, AOF")]
       api["FastAPI :8000<br/>127.0.0.1 only"]
     end
@@ -51,13 +52,14 @@ flowchart TB
   sim -.->|"MQTT"| mqtt
   prod -->|"Tailscale · acks=all"| kafka
   kafka -->|"Tailscale"| consumer
+  kafka -->|"Tailscale"| hist
+  hist -->|"gzip JSON Lines"| s3[("S3 bucket<br/>raw/sensor_events")]
   dash -->|"HTTPS poll, 3 s"| caddy
   gha -.->|"deploy: Tailscale + SSH"| pi
   gha -.->|"deploy: Tailscale + SSH"| compose
 
   kafka -.-> flink["Flink rolling metrics (Planned)"]
-  kafka -.-> hist["Historical consumer (Planned)"]
-  hist -.-> snow[("Snowflake (Planned)")]
+  s3 -.-> snow[("Snowflake (Planned)")]
   snow -.-> dbt["dbt models (Planned)"]
   ingest -.-> dlq[("Rejected-event store (Planned)")]
 
@@ -79,9 +81,11 @@ Solid boxes are implemented. Dashed boxes are planned (see the [roadmap](../READ
 | Kafka producer | Publish pending rows to Kafka; mark rows only after broker acknowledgment | Pi, systemd | Implemented | [`gateway/kafka_producer.py`](../gateway/kafka_producer.py) |
 | Cleanup | Delete Kafka-acknowledged rows older than 24 h | Pi, systemd timer | Implemented, tested | [`gateway/cleanup.py`](../gateway/cleanup.py) |
 | Health check | Emit JSON status (backlog, freshness, disk); exit 0/1/2 | Pi, systemd timer | Implemented, tested | [`gateway/health.py`](../gateway/health.py) |
-| Kafka broker | Single-node KRaft broker; topic `greenhouse.sensor-readings` | EC2 #1, systemd | Implemented | [`infrastructure/kafka/greenhouse.properties.example`](../infrastructure/kafka/greenhouse.properties.example), [`infrastructure/systemd/kafka.service`](../infrastructure/systemd/kafka.service) |
+| Kafka broker | Single-node KRaft broker; topic `greenhouse.sensor-readings` | EC2 #1, systemd | Implemented | [`infrastructure/kafka/greenhouse.properties.example`](../infrastructure/kafka/greenhouse.properties.example), [`infrastructure/systemd/kafka_EC2/kafka.service`](../infrastructure/systemd/kafka_EC2/kafka.service) |
 | Live consumer | Consume topic, maintain latest value per sensor/measurement in Redis | EC2 #2, Docker Compose | Implemented | [`consumers/live/consumer.py`](../consumers/live/consumer.py) |
 | Redis | Latest-state materialized view | EC2 #2, Docker Compose | Implemented | [`compose.yaml`](../compose.yaml) |
+| Historical consumer | Consume the topic in its own group, batch events, upload gzip JSON Lines to S3, commit after upload | EC2 #2, Docker Compose | Implemented | [`consumers/historical/consumer.py`](../consumers/historical/consumer.py) |
+| S3 bucket | Durable raw archive of every event | AWS | In use; bucket and IAM are configured outside this repo | n/a |
 | FastAPI | Read-only HTTP API over Redis | EC2 #2, Docker Compose | Implemented | [`api/main.py`](../api/main.py) |
 | Caddy | HTTPS reverse proxy to `127.0.0.1:8000` | EC2 #2, systemd | Implemented | [`infrastructure/caddy/caddyfile`](../infrastructure/caddy/caddyfile) |
 | Dashboard | Poll API every 3 s, render cards, mark readings older than 30 s as stale | Netlify | Implemented | [`dashboard/src/App.jsx`](../dashboard/src/App.jsx) |
@@ -90,7 +94,7 @@ Solid boxes are implemented. Dashed boxes are planned (see the [roadmap](../READ
 | Tests | pytest suites for schemas, ingest, cleanup, health, the live consumer, and the API | CI and local | Implemented | [`tests/`](../tests/) |
 | Rejected-event storage | Persist invalid payloads and errors | Pi | Planned | n/a |
 | Flink | Event-time rolling metrics | TBD | Planned | n/a |
-| Historical consumer, Snowflake, dbt | Warehouse and analytics | TBD | Planned | n/a |
+| Snowflake, dbt | Warehouse and analytics over the S3 archive | TBD | Planned | n/a |
 
 ## Event flow
 
@@ -100,8 +104,9 @@ Solid boxes are implemented. Dashed boxes are planned (see the [roadmap](../READ
 4. **Persist, then acknowledge.** `INSERT OR IGNORE` into `sensor_events` (`event_id` primary key, `synchronous=FULL`). The MQTT ack is sent only after the transaction commits. Invalid messages are logged, acknowledged, and dropped.
 5. **Produce.** `kafka_producer.py` reads up to `KAFKA_BATCH_SIZE` (default 100) rows where `kafka_published_at IS NULL`, ordered by `received_at, event_id`. It sends them with key `event_id` and the stored JSON as the value, waits for every delivery callback, then sets `kafka_published_at` for acknowledged rows only. It does not start a new batch while the previous one has unresolved messages.
 6. **Consume.** `consumer.py` polls Kafka, checks the fields the live view needs, and runs an atomic Lua script that updates the Redis hash `greenhouse:latest:{gateway_id}:{sensor_id}:{measurement_type}` unless the stored `timestamp_ms` is newer. It commits the Kafka offset synchronously after Redis responds.
-7. **Serve.** `GET /api/v1/sensors/latest` scans `greenhouse:latest:*`, pipelines `HGETALL`, and returns `{count, readings[]}` sorted by gateway, sensor, and measurement. `GET /health` pings Redis.
-8. **Display.** The dashboard fetches the endpoint every 3 s. A reading is stale when its event timestamp is more than 30 s old. If a fetch fails, the last known readings stay on screen with an "Offline" status.
+7. **Archive.** `consumers/historical/consumer.py` reads the same topic in group `greenhouse-historical`. It buffers events per partition and flushes when a batch reaches `HISTORICAL_BATCH_SIZE` (240) events or is `HISTORICAL_FLUSH_SECONDS` (300) old. A batch becomes one gzip-compressed JSON Lines object at `s3://$S3_BUCKET/raw/sensor_events/year=YYYY/month=MM/day=DD/<topic>/partition=N/offsets-<first>-<last>.jsonl.gz`; each line is the original event plus `_kafka_topic`, `_kafka_partition`, and `_kafka_offset`. The Kafka offset is committed synchronously only after `put_object` returns. On SIGTERM it flushes pending batches before closing.
+8. **Serve.** `GET /api/v1/sensors/latest` scans `greenhouse:latest:*`, pipelines `HGETALL`, and returns `{count, readings[]}` sorted by gateway, sensor, and measurement. `GET /health` pings Redis.
+9. **Display.** The dashboard fetches the endpoint every 3 s. A reading is stale when its event timestamp is more than 30 s old. If a fetch fails, the last known readings stay on screen with an "Offline" status.
 
 Background tasks on the Pi run independently of this flow: `greenhouse-cleanup.timer` (hourly) and `greenhouse-health.timer` (every minute).
 
@@ -112,7 +117,9 @@ Background tasks on the Pi run independently of this flow: `greenhouse-cleanup.t
 | ESP32 | Mosquitto | MQTT 3.1.1, port 1883 | Username/password, no TLS | Uses the Pi's LAN address |
 | Ingest | Mosquitto | MQTT 3.1.1, `localhost:1883` | Username/password from `.env` | Always `localhost`; port and topic default to 1883 and `greenhouse/telemetry`, overridable in `.env` |
 | Producer | Kafka | Kafka protocol, `PLAINTEXT`, port 9092 | Tailscale network | `acks=all`, idempotent producer |
-| Consumer | Kafka | Kafka protocol, `PLAINTEXT` | Tailscale network | Own consumer group; manual offset commits |
+| Live consumer | Kafka | Kafka protocol, `PLAINTEXT` | Tailscale network | Group `LIVE_KAFKA_CONSUMER_GROUP`; manual offset commits |
+| Historical consumer | Kafka | Kafka protocol, `PLAINTEXT` | Tailscale network | Group `HISTORICAL_KAFKA_CONSUMER_GROUP`; manual offset commits |
+| Historical consumer | S3 | HTTPS | AWS credentials from the EC2 instance profile | Region `AWS_REGION` |
 | Consumer, API | Redis | Redis protocol, port 6379 | Internal Docker network only | Redis publishes no host port |
 | Caddy | FastAPI | HTTP | `127.0.0.1:8000` | Compose binds the API to loopback |
 | GitHub Actions | Pi, serving host | SSH over Tailscale | Ephemeral Tailscale node tagged `tag:ci`; deploy keys | `main` only, after tests pass |
@@ -128,6 +135,7 @@ Each hop is decoupled by a durable or restartable boundary: SQLite absorbs Kafka
 | --- | --- | --- | --- |
 | SQLite `sensor_events` (Pi) | One row per accepted event: `event_id` (PK), `event_json`, `received_at` (Pi UTC), `kafka_published_at` (NULL until Kafka acknowledges) | Outbox. Accepts events while Kafka or the WAN is down, and deduplicates by `event_id` | Pending rows are kept indefinitely. Acknowledged rows are deleted after 24 h. This is not a history store |
 | Kafka topic `greenhouse.sensor-readings` (EC2 #1) | Full event JSON as value, `event_id` as key. One partition, replication factor 1 | Decouples producer from consumers; allows replay and additional consumer groups | 168 h by `log.retention.hours` in the template |
+| S3 `raw/sensor_events/` | One `.jsonl.gz` object per flushed batch, partitioned by UTC date, topic, and partition, named by offset range. Lines are full events plus Kafka lineage fields | Permanent raw archive and source for the planned warehouse load. Duplicates are possible across objects and are deduplicated on `event_id` downstream | Governed by the bucket's lifecycle rules, not by this repo |
 | Redis (EC2 #2) | One hash per `gateway_id`/`sensor_id`/`measurement_type`: `value`, `unit`, `timestamp`, `timestamp_ms`, `event_id`, `sensor_id`, `gateway_id`, `measurement_type` | Low-latency latest-state view for the API. Derived data, rebuildable from Kafka | AOF persistence on a Docker volume (`redis_data`). Keys have no TTL; a retired sensor's key is deleted manually |
 
 SQLite indexes live in [`gateway/migrations/002_outbox_indexes.sql`](../gateway/migrations/002_outbox_indexes.sql). The migration is applied by hand (see [Deployment](deployment.md#database-migration)).
@@ -143,6 +151,7 @@ Delivery is **at-least-once** from the Pi's SQLite commit onward. Duplicates are
 | Ingest → SQLite | `synchronous=FULL`, ack after commit | A SQLite error is logged and re-raised, which terminates the process. systemd restarts it, and the unacknowledged message is redelivered |
 | SQLite → Kafka | Per-message delivery callback, `acks=all`, idempotent producer | Failed or unconfirmed rows stay pending and are retried (`KAFKA_RETRY_SECONDS`, default 5). `delivery.timeout.ms` defaults to 60 000 ms |
 | Kafka → Redis | Offset committed after the Redis write | A Redis error terminates the consumer. Docker restarts it and the uncommitted message is reprocessed |
+| Kafka → S3 | Offset committed after `put_object` succeeds, per batch | An S3 error terminates the consumer; Docker restarts it and the batch is re-read and re-uploaded, possibly under a different object key |
 
 **Duplicates.** Duplicates are possible at the ESP32 (a publish succeeds but the ack is lost), in Kafka (the producer crashes after delivery but before the `kafka_published_at` update; Kafka does not deduplicate by key), and at the consumer (redelivery after a crash). Current handling:
 
@@ -165,6 +174,7 @@ Delivery is **at-least-once** from the Pi's SQLite commit onward. Duplicates are
 | Ingest service down | Mosquitto queues messages for its persistent session | systemd `Restart=on-failure` |
 | Kafka or Tailscale down | Rows accumulate as pending in SQLite; health check warns at 60 s of backlog age and goes critical at 300 s | Automatic, producer retries every 5 s |
 | Consumer or Redis down | Kafka retains events; offsets stay uncommitted | Docker `restart: unless-stopped`, then the consumer resumes from its committed offset |
+| S3 unreachable or credentials invalid | Historical consumer exits; Kafka retains events | Docker restarts it; the pending batch is replayed from the last committed offset |
 | Redis data lost | Dashboard empty or partial | Replay from Kafka with a new consumer group, or reset offsets ([Operations](operations.md#4-kafka-has-events-but-redis-is-empty)) |
 | Kafka broker restarts | Producers retry; the Pi buffers in SQLite; the consumer reconnects | systemd `Restart=on-failure`, `RestartSec=10` |
 
@@ -172,11 +182,11 @@ Diagnostic procedures: [Operations](operations.md).
 
 ## Planned components
 
-Rejected-event storage, Flink rolling metrics, and the Snowflake and dbt historical path are planned. The roadmap lives in the root [README](../README.md#roadmap).
+Rejected-event storage, Flink rolling metrics, and loading the S3 archive into Snowflake with dbt models are planned. The roadmap lives in the root [README](../README.md#roadmap).
 
 ## CI/CD
 
-[`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) runs the pytest suite (with a Redis service) and the dashboard lint and build on every push and pull request. On a push to `main`, once both pass, two jobs deploy over Tailscale and SSH: one restarts the Pi's ingest and producer services, the other rebuilds the `live-consumer` and `api` containers. Details are in [Deployment](deployment.md#continuous-integration-and-deployment).
+[`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) runs the pytest suite (with a Redis service) and the dashboard lint and build on every push and pull request. On a push to `main`, once both pass, two jobs deploy over Tailscale and SSH: one restarts the Pi's ingest and producer services, the other rebuilds the `live-consumer`, `historical-consumer`, and `api` containers. Details are in [Deployment](deployment.md#continuous-integration-and-deployment).
 
 ## Implementation notes
 

@@ -19,7 +19,7 @@ A live consumer reads the topic and maintains one Redis hash per `gateway_id`, `
 - The API stays simple and fast, and it never touches Kafka.
 - Keys have no TTL, so a retired sensor's key is removed manually.
 - The guard compares event timestamps, so a reading with a timestamp ahead of real time holds the key until real time catches up.
-- The view holds only the latest value. History belongs to the analytics path.
+- The view holds only the latest value. History is kept by the S3 archive ([ADR 0012](0012-historical-archive-to-s3.md)).
 
 ## Related
 

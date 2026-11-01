@@ -22,7 +22,7 @@
 
 # Greenhouse IoT Streaming Pipeline
 
-An end-to-end streaming pipeline for greenhouse temperature, humidity, atmospheric pressure, and soil moisture. Sensors on an ESP32 publish readings over MQTT to a Raspberry Pi, which validates and buffers them in SQLite before forwarding them to Kafka on AWS. A live consumer keeps the latest values in Redis, and FastAPI serves them to a React dashboard, and a historical consumer is planned.
+An end-to-end streaming pipeline for greenhouse temperature, humidity, atmospheric pressure, and soil moisture. Sensors on an ESP32 publish readings over MQTT to a Raspberry Pi, which validates and buffers them in SQLite before forwarding them to Kafka on AWS. A live consumer keeps the latest values in Redis for a React dashboard served by FastAPI, and a historical consumer archives every event to S3.
 
 **Live:** [Dashboard](https://greenhouse.gregoryjoshua.com) · [API health](https://api.gregoryjoshua.com/health)
 
@@ -43,6 +43,7 @@ flowchart LR
     kafka["Kafka"]
     consumer["Live consumer"] --> redis[("Redis")]
     redis --> api["FastAPI + Caddy"]
+    hist["Historical consumer"] --> s3[("S3<br/>JSON Lines, gzip")]
   end
 
   dash["React dashboard<br/>Netlify"]
@@ -50,11 +51,12 @@ flowchart LR
   esp -->|"MQTT QoS 1"| mqtt
   prod -->|"Tailscale"| kafka
   kafka -->|"Tailscale"| consumer
+  kafka -->|"Tailscale"| hist
   dash -->|"HTTPS poll"| api
 
   ingest -.-> dlq[("Rejected events")]
   kafka -.-> flink["Flink rolling metrics"]
-  kafka -.-> snow[("Snowflake")]
+  s3 -.-> snow[("Snowflake")]
   snow -.-> dbt["dbt"]
 
   classDef planned fill:#fff,stroke:#999,stroke-dasharray:5 5,color:#777;
@@ -69,7 +71,8 @@ Solid boxes are implemented. Dashed boxes are on the [roadmap](#roadmap). Detail
 2. The Pi validates each event against its schema version, commits it to SQLite, and only then acknowledges the MQTT message.
 3. A producer sends pending rows to Kafka and marks a row delivered only after Kafka acknowledges it.
 4. The live consumer updates the latest reading per sensor and measurement in Redis, committing its Kafka offset after the write.
-5. FastAPI reads Redis, and the dashboard polls it every 3 seconds, flagging readings older than 30 seconds as stale.
+5. The historical consumer, in its own consumer group, batches events into gzip-compressed JSON Lines objects in S3 (partitioned by date and named by Kafka offset range) and commits only after the upload succeeds.
+6. FastAPI reads Redis, and the dashboard polls it every 3 seconds, flagging readings older than 30 seconds as stale.
 
 Delivery is at-least-once, with deduplication by `event_id`.
 
@@ -78,7 +81,8 @@ Delivery is at-least-once, with deduplication by `event_id`.
 - **Durable edge buffering.** A SQLite outbox with acknowledge-after-commit ingestion keeps accepted events through Kafka and network outages. Retention cleanup removes only delivered rows.
 - **Delivery semantics.** Persistent QoS 1 sessions, an acknowledged idempotent Kafka producer, manual offset commits, and idempotent Redis updates (a Lua script rejects older timestamps).
 - **Versioned data contracts.** JSON Schema v1 and v2 coexist, and the gateway validates by `schema_version`.
-- **Replayable streaming.** Kafka retains 7 days of events, so other consumer groups can be added.
+- **Replayable streaming.** Kafka retains 7 days of events, and two independent consumer groups read the same topic: a live view and a durable archive.
+- **Historical archive.** Every event lands in S3 as date-partitioned, offset-ranged `.jsonl.gz` objects carrying Kafka lineage fields, ready for a warehouse load.
 - **Operations.** systemd services and timers, Docker Compose, a gateway health check with exit codes, and deployment verification scripts.
 - **Testing and CI/CD.** pytest suites for schemas, ingest, cleanup, health, the live consumer (offset-commit ordering, Redis timestamp guard), and the API against a real Redis. GitHub Actions runs them with a dashboard lint and build, then deploys to the Pi and EC2 over Tailscale and SSH on `main`.
 - **Decision records.** The reasoning behind the main design choices is written down as [ADRs](docs/decisions/README.md).
@@ -91,7 +95,7 @@ Planned work, grouped by theme. Items are not scheduled.
 
 **Reliability and hardening**
 
-- **Rejected-event storage.** Persist invalid payloads and validation errors in a dead-letter table with bounded retention and a replay path.
+- **Rejected-event storage.** Persist invalid payloads and validation errors in a dead-letter table with bounded retention and a replay path, and quarantine malformed Kafka messages in the historical consumer instead of stopping on them.
 - **Gateway input hardening.** Handle non-object JSON and malformed `schema_version` values without a process restart, and enforce `uuid` and `date-time` formats at the gateway so it agrees with the consumer's checks.
 - **Firmware.** Socket timeouts so a stalled broker cannot block publishing, a periodic heartbeat with firmware version, optional on-device buffering, and calibrated soil moisture as a new unit.
 - **Kafka.** A multi-broker cluster with replication for high availability and storage-loss protection, and a topic-level retention policy managed as code.
@@ -114,7 +118,7 @@ Planned work, grouped by theme. Items are not scheduled.
 
 **Analytics and features**
 
-- **Historical analytics.** A separate Kafka consumer group loading Snowflake, with dbt models and historical dashboard views.
+- **Historical analytics.** Load the S3 archive into Snowflake (external stage or Snowpipe), deduplicate on `event_id` in dbt models, and add historical views to the dashboard.
 - **Flink.** Event-time rolling-window metrics, such as 5-minute averages and moisture trends.
 - **Dashboard.** Trend charts and per-sensor history.
 - **More sensors.** Additional measurement types (for example light or CO₂) through new schema versions.
@@ -142,12 +146,13 @@ sensor_simulator/    Synthetic MQTT event generator
 gateway/             Raspberry Pi ingest, producer, cleanup, health, migrations
 schemas/             Versioned event schemas and examples
 consumers/live/      Kafka to Redis consumer
+consumers/historical/ Kafka to S3 archive consumer
 api/                 FastAPI service
 dashboard/           React / Vite dashboard
 infrastructure/      systemd, Mosquitto, Kafka, Caddy config and scripts
 tests/               pytest suites (schemas, gateway, consumer, API)
 .github/workflows/   CI and deployment workflow
 requirements/        Dependencies per deployment role
-compose.yaml         Consumer, Redis, and API containers
+compose.yaml         Consumers, Redis, and API containers
 docs/                Architecture, contracts, deployment, operations
 ```
