@@ -229,9 +229,39 @@ def main():
 
                 # Do not silently commit malformed records.
                 # Investigate or quarantine them before skipping.
-                event = parse_event(message.value())
-
                 key = (message.topic(), message.partition())
+
+                try:
+                    event = parse_event(message.value())
+
+                except (ValueError, TypeError, KeyError) as exc:
+                    logger.warning(
+                        "Skipping malformed event: "
+                        "topic=%s partition=%s offset=%s error=%s",
+                        message.topic(),
+                        message.partition(),
+                        message.offset(),
+                        exc,
+                    )
+
+                    # First persist any valid events already buffered
+                    # for this partition, then commit their offsets.
+                    flush_partition(kafka, s3, batches, key)
+
+                    # Explicitly commit past the rejected event.
+                    # Kafka commits the NEXT offset to consume.
+                    kafka.commit(
+                        offsets=[
+                            TopicPartition(
+                                message.topic(),
+                                message.partition(),
+                                message.offset() + 1,
+                            )
+                        ],
+                        asynchronous=False,
+                    )
+
+                    continue
 
                 if key not in batches:
                     batches[key] = {
