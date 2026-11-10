@@ -155,7 +155,7 @@ Rules for a new version:
 | Redis | New keys appear automatically | Only if key structure or stored fields change. Old keys need manual cleanup |
 | [`api/main.py`](../api/main.py) | Builds the live response from fixed hash fields; `value` must be numeric | Only if the live response shape changes |
 | [`api/repositories/snowflake.py`](../api/repositories/snowflake.py) / dbt marts | History series reads fixed mart columns | Only if mart grain or column names change |
-| [`dashboard/src/App.jsx`](../dashboard/src/App.jsx) | Label and order in `METRICS`; `formatValue` for the unit | Optional for new types (generic fallback exists); needed for a unit that requires special formatting |
+| [`dashboard/src/lib/metrics.js`](../dashboard/src/lib/metrics.js), [`format.js`](../dashboard/src/lib/format.js) | Label and order in `METRICS`; `formatValue` for the unit (used by Live and History) | Optional for new types (generic fallback exists); needed for a unit that requires special formatting |
 | `tests/` | Extend `tests/schemas/` (and `tests/gateway/test_ingest.py` for gateway behavior) | Schema or code changes |
 | `docs/` | This file, [Adding a sensor](adding-a-sensor.md), the root README | Always |
 

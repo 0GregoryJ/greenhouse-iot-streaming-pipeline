@@ -235,7 +235,7 @@ curl -s "http://127.0.0.1:8000/api/v1/history/series?sensor_id=bme280-001&measur
   | python3 -m json.tool
 ```
 
-`period` must be one of `24h`, `7d`, or `30d`. The response includes `resolution` (`hour` or `day`), `unit`, `count`, and `points[]` with `timestamp`, `avg`, `min`, `max`, and `count`.
+`period` must be one of `24h`, `7d`, or `30d`. The response includes `resolution` (`hour` or `day`), `unit`, `count`, and `points[]` with `timestamp`, `avg`, `min`, `max`, and `count`. The dashboard History tab uses this endpoint; Live keeps polling Redis independently.
 
 ## Historical API and Snowflake
 
@@ -260,6 +260,8 @@ sudo docker compose logs --tail 100 api
 | SQL / object does not exist | Marts missing or `SNOWFLAKE_SCHEMA` does not match the dbt target schema. Run `dbt run` in [`warehouse/`](../warehouse/) |
 | HTTP 422 on history | Invalid `period` (not `24h`/`7d`/`30d`) or empty query params |
 | Empty `points` with 200 | Query succeeded; no rows in the selected window for that sensor/measurement |
+| Dashboard History shows an error banner | Same causes as API 503/422 above, or CORS. Live tab may still be healthy |
+| Sensor missing from History pickers | Discovery uses live Redis readings. Offline / warehouse-only sensors do not appear until a history metadata endpoint exists |
 
 Live endpoints keep working when Snowflake is down. History is on-demand and is not part of `/health`.
 

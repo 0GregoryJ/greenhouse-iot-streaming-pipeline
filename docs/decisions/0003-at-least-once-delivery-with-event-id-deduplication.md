@@ -21,7 +21,7 @@ Each hop acknowledges only after the next durable step, and duplicates are remov
 
 - No acknowledged event is lost between the Pi's SQLite commit and Redis, under the failures the design covers.
 - Duplicates can occur at the ESP32, in Kafka (a crash after delivery but before the row is marked), and at the consumer after a crash. SQLite and Redis absorb them.
-- Kafka does not deduplicate. Consumers that aggregate (the planned Flink, Snowflake, and dbt work) deduplicate on `event_id`.
+- Kafka does not deduplicate. Consumers that aggregate (Snowflake/dbt today; planned Flink) deduplicate on `event_id`.
 - Redis converges on the event with the greatest timestamp, so replays and out-of-order delivery cannot move a reading backwards.
 - Because ordering in Kafka is arrival order at the Pi, event-time logic belongs in consumers.
 - The Redis guard trusts event timestamps. The firmware publishes only after the clock is synchronized.

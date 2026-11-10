@@ -24,7 +24,7 @@ Ingest and producer are separate systemd services, so a Kafka outage never block
 - Events are durable from the moment SQLite commits. Anything before that point (the ESP32's RAM) is not.
 - During a Kafka or WAN outage, `pending` grows and drains oldest-first after recovery. Disk usage is the limit, and the health check warns at 80 % and 90 %.
 - A crash between "Kafka acknowledged" and "row marked" resends the row, so Kafka can hold duplicates ([ADR 0003](0003-at-least-once-delivery-with-event-id-deduplication.md)).
-- The database is a buffer, not a history store. Long-term history is planned through a second Kafka consumer group ([roadmap](../../README.md#roadmap)).
+- The database is a buffer, not a history store. Long-term history is handled by the historical Kafka consumer group writing to S3, then Snowflake/dbt marts ([ADR 0012](0012-historical-archive-to-s3.md), [ADR 0013](0013-snowflake-history-api-with-jwt-key.md)).
 - Schema changes to the table are applied by hand (`gateway/migrations/`).
 - SQLite allows one writer at a time. The services use `busy_timeout` and the load (about 48 events per minute) is far below its limits.
 

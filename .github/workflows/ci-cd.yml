@@ -94,6 +94,9 @@ jobs:
       - name: Run lint
         run: npm run lint
 
+      - name: Run unit tests
+        run: npm run test
+
       - name: Build dashboard
         run: npm run build
 

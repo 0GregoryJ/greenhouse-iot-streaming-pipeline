@@ -8,7 +8,7 @@ Related documents: [Architecture](architecture.md) · [Operations](operations.md
 
 | Component | How it is deployed |
 | --- | --- |
-| Tests and dashboard lint/build | GitHub Actions on every push and pull request ([`ci-cd.yml`](../.github/workflows/ci-cd.yml)) |
+| Tests and dashboard lint/test/build | GitHub Actions on every push and pull request ([`ci-cd.yml`](../.github/workflows/ci-cd.yml)) |
 | Pi gateway services (ingest, producer) | GitHub Actions on push to `main`: pull, install requirements, restart, check `is-active` |
 | Serving host (live consumer, historical consumer, API) | GitHub Actions on push to `main`: pull, rebuild and recreate the three containers, check `/health` |
 | Pi systemd units | [`install-pi-services.sh`](../infrastructure/scripts/install-pi-services.sh) (from `infrastructure/systemd/raspberry_pi/`), run by hand when a unit file changes |
@@ -25,7 +25,7 @@ Related documents: [Architecture](architecture.md) · [Operations](operations.md
 | Job | Runs on | What it does |
 | --- | --- | --- |
 | `python-tests` | Every push and pull request | Python 3.12, a `redis:7-alpine` service, `TEST_REDIS_URL=redis://localhost:6379/15`, then `python -m pytest tests/ -v` |
-| `dashboard` | Every push and pull request | Node 22 in `dashboard/`: `npm ci`, `npm run lint`, `npm run build` |
+| `dashboard` | Every push and pull request | Node 22 in `dashboard/`: `npm ci`, `npm run lint`, `npm run test`, `npm run build` |
 | `deploy-pi` | Push to `main`, after `python-tests` and `dashboard` pass | Deploys the gateway services to the Raspberry Pi |
 | `deploy-serving-ec2` | Push to `main`, after `python-tests` and `dashboard` pass | Deploys the live consumer, historical consumer, and API to the serving host |
 
@@ -100,6 +100,7 @@ docker stop greenhouse-test-redis
 | `tests/gateway/` | `on_message` persistence, schema validation in ingest, cleanup, health thresholds |
 | `tests/consumers/` | `parse_event`, the Redis timestamp guard, Redis failure propagation, offset commit after the Redis write |
 | `tests/api/` | `/health`, `/api/v1/sensors/latest` (live Redis), `/api/v1/history/series` (Snowflake call mocked), invalid `period` validation |
+| `dashboard/` (`npm run test`) | History summary weighting, insights, and timeline gap-fill helpers |
 
 ## Where things run
 
@@ -351,14 +352,17 @@ Run `git checkout main` afterwards. Compose reuses cached layers where it can. R
 
 ## Dashboard (Netlify)
 
-The React/Vite app in [`dashboard/`](../dashboard/) is deployed from Git by Netlify to `https://greenhouse.gregoryjoshua.com`. The Netlify build settings live in the Netlify site configuration. The dashboard builds with `npm run build` (output in `dashboard/dist`), and the `dashboard` CI job runs the same lint and build on every push.
+The React/Vite app in [`dashboard/`](../dashboard/) is deployed from Git by Netlify to `https://greenhouse.gregoryjoshua.com`. The Netlify build settings live in the Netlify site configuration. The dashboard builds with `npm run build` (output in `dashboard/dist`), and the `dashboard` CI job runs lint, unit tests, and build on every push.
 
-The API URL is set in [`dashboard/src/App.jsx`](../dashboard/src/App.jsx). The API lists the dashboard origin in `CORS_ORIGINS`, and `http://localhost:5173` (the default) allows local development against the production API.
+The API origin is resolved in [`dashboard/src/api/config.js`](../dashboard/src/api/config.js) from `VITE_API_URL` or `VITE_API_BASE_URL`, defaulting to `https://api.gregoryjoshua.com`. Set the env var in Netlify (or a local `.env`) to point at another API. The API lists the dashboard origin in `CORS_ORIGINS`, and `http://localhost:5173` (the default) allows local development against the production API.
+
+The Live tab polls `/api/v1/sensors/latest`. The History tab calls `/api/v1/history/series` (Snowflake marts). History sensor pickers are populated from the live endpoint, so warehouse-only sensors do not appear until a metadata endpoint exists.
 
 ```bash
 cd dashboard
 npm ci
 npm run lint      # oxlint
+npm run test      # history summary / timeline helpers
 npm run build     # vite build, output in dashboard/dist
 npm run dev       # local dev server (Vite, port 5173 by default)
 ```
@@ -403,7 +407,7 @@ pip install -r requirements/simulator.txt
 python sensor_simulator/simulate.py      # Ctrl+C to stop
 ```
 
-Simulated events are labelled as fake by their IDs: `gateway_id` `sim-gateway-001` and `sensor_id`s `sim-soil-001` and `sim-bme280-001`. They travel through SQLite, Kafka, and Redis like real events but use their own Redis keys, so they never overwrite physical readings. While the simulator runs, the dashboard shows extra `sim-` cards next to the real ones. To remove them afterwards, delete the keys:
+Simulated events are labelled as fake by their IDs: `gateway_id` `sim-gateway-001` and `sensor_id`s `sim-soil-001` and `sim-bme280-001`. They travel through SQLite, Kafka, and Redis like real events but use their own Redis keys, so they never overwrite physical readings. While the simulator runs, the Live dashboard shows extra `sim-` cards next to the real ones, and those sensors also appear in History pickers. To remove them afterwards, delete the keys:
 
 ```bash
 sudo docker compose exec redis sh -c "redis-cli --scan --pattern 'greenhouse:latest:sim-gateway-001:*' | xargs -r redis-cli DEL"

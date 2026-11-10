@@ -57,16 +57,15 @@ flowchart TB
   histcons -->|"gzip JSON Lines"| s3[("S3 bucket<br/>raw/sensor_events")]
   s3 --> snow
   snow -->|"JWT · marts"| api
-  dash -->|"HTTPS poll, 3 s"| caddy
+  dash -->|"HTTPS · live poll + history"| caddy
   gha -.->|"deploy: Tailscale + SSH"| pi
   gha -.->|"deploy: Tailscale + SSH"| compose
 
   kafka -.-> flink["Flink rolling metrics (Planned)"]
   ingest -.-> dlq[("Rejected-event store (Planned)")]
-  dash -.-> charts["History charts (Planned)"]
 
   classDef planned fill:#fff,stroke:#999,stroke-dasharray:5 5,color:#777;
-  class flink,dlq,charts planned;
+  class flink,dlq planned;
 ```
 
 Solid boxes are implemented. Dashed boxes are planned (see the [roadmap](../README.md#roadmap)). Dotted arrows are side channels (cleanup, health, deployment), not event flow.
@@ -90,7 +89,7 @@ Solid boxes are implemented. Dashed boxes are planned (see the [roadmap](../READ
 | S3 bucket | Durable raw archive of every event | AWS | In use; bucket and IAM are configured outside this repo | n/a |
 | FastAPI | Read-only HTTP API: live readings from Redis, historical series from Snowflake marts | EC2 #2, Docker Compose | Implemented | [`api/`](../api/) |
 | Caddy | HTTPS reverse proxy to `127.0.0.1:8000` | EC2 #2, systemd | Implemented | [`infrastructure/caddy/caddyfile`](../infrastructure/caddy/caddyfile) |
-| Dashboard | Poll API every 3 s, render cards, mark readings older than 30 s as stale | Netlify | Implemented | [`dashboard/src/App.jsx`](../dashboard/src/App.jsx) |
+| Dashboard | Live tab polls every 3 s and marks readings older than 30 s stale; History tab charts `/api/v1/history/series` with weighted summaries | Netlify | Implemented | [`dashboard/`](../dashboard/) |
 | Tailscale | Private network between Pi, Kafka host, and serving host; CI also joins it to reach the deploy targets | Pi, both EC2 hosts, CI runners | In use | n/a |
 | GitHub Actions | Run tests and the dashboard build; on `main`, deploy the Pi gateway services and the serving containers | GitHub-hosted runners | Implemented | [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) |
 | Tests | pytest suites for schemas, ingest, cleanup, health, the live consumer, and the API | CI and local | Implemented | [`tests/`](../tests/) |
@@ -111,7 +110,7 @@ Solid boxes are implemented. Dashed boxes are planned (see the [roadmap](../READ
 8. **Warehouse.** Objects in S3 are loaded into Snowflake `GREENHOUSE_ANALYTICS.RAW.SENSOR_EVENTS`. The dbt project in [`warehouse/`](../warehouse/) deduplicates on `event_id` and builds marts such as `FCT_SENSOR_HOURLY` and `FCT_SENSOR_DAILY` (schema name from the dbt profile; the API defaults to `GREENHOUSE_DBT_MARTS`).
 9. **Serve (live).** `GET /api/v1/sensors/latest` scans `greenhouse:latest:*`, pipelines `HGETALL`, and returns `{count, readings[]}` sorted by gateway, sensor, and measurement. `GET /health` pings Redis only.
 10. **Serve (history).** `GET /api/v1/history/series` queries Snowflake marts for `period` `24h`, `7d`, or `30d` (hourly or daily grain). The API opens a JWT connection with the RSA key mounted at `/run/secrets/snowflake_api_key.pem` ([`api/repositories/snowflake.py`](../api/repositories/snowflake.py)).
-11. **Display.** The dashboard fetches the live endpoint every 3 s. A reading is stale when its event timestamp is more than 30 s old. If a fetch fails, the last known readings stay on screen with an "Offline" status. History charts that call the history endpoint are planned.
+11. **Display.** The dashboard **Live** tab fetches the live endpoint every 3 s. A reading is stale when its event timestamp is more than 30 s old. If a fetch fails, the last known readings stay on screen with an "Offline" status. The **History** tab calls `GET /api/v1/history/series` for sensor/measurement/period trends (avg line, min–max band, weighted summaries). Sensor options for History are discovered from the live payload.
 
 Background tasks on the Pi run independently of this flow: `greenhouse-cleanup.timer` (hourly) and `greenhouse-health.timer` (every minute).
 
@@ -129,7 +128,7 @@ Background tasks on the Pi run independently of this flow: `greenhouse-cleanup.t
 | API | Snowflake | HTTPS / Snowflake protocol | JWT (`SNOWFLAKE_JWT`) with RSA key from a host path mounted into the container | Key path and passphrase from `.env`; connection opened on demand |
 | Caddy | FastAPI | HTTP | `127.0.0.1:8000` | Compose binds the API to loopback |
 | GitHub Actions | Pi, serving host | SSH over Tailscale | Ephemeral Tailscale node tagged `tag:ci`; deploy keys | `main` only, after tests pass |
-| Dashboard | Caddy | HTTPS | Public; CORS allow-list on the API | API URL is set in `App.jsx` |
+| Dashboard | Caddy | HTTPS | Public; CORS allow-list on the API | API origin from `VITE_API_URL` / `VITE_API_BASE_URL`, default production host ([`dashboard/src/api/config.js`](../dashboard/src/api/config.js)) |
 
 Startup dependencies: ingest requires `mosquitto.service`. The producer expects network and `tailscaled`. In Compose, the consumer and API wait for Redis to be healthy; the Kafka client reconnects on its own.
 
@@ -191,11 +190,11 @@ Diagnostic procedures: [Operations](operations.md).
 
 ## Planned components
 
-Rejected-event storage, Flink rolling metrics, and dashboard history charts are planned. The S3 archive, Snowflake load, dbt marts, and history API are implemented. The roadmap lives in the root [README](../README.md#roadmap).
+Rejected-event storage and Flink rolling metrics are planned. The S3 archive, Snowflake load, dbt marts, history API, and dashboard History tab are implemented. The roadmap lives in the root [README](../README.md#roadmap).
 
 ## CI/CD
 
-[`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) runs the pytest suite (with a Redis service) and the dashboard lint and build on every push and pull request. On a push to `main`, once both pass, two jobs deploy over Tailscale and SSH: one restarts the Pi's ingest and producer services, the other rebuilds the `live-consumer`, `historical-consumer`, and `api` containers. Details are in [Deployment](deployment.md#continuous-integration-and-deployment).
+[`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) runs the pytest suite (with a Redis service) and the dashboard lint, unit tests, and build on every push and pull request. On a push to `main`, once both pass, two jobs deploy over Tailscale and SSH: one restarts the Pi's ingest and producer services, the other rebuilds the `live-consumer`, `historical-consumer`, and `api` containers. Details are in [Deployment](deployment.md#continuous-integration-and-deployment).
 
 ## Implementation notes
 

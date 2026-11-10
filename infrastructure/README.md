@@ -436,7 +436,7 @@ Infrastructure and application changes follow this process:
 
 1. Implement changes on a feature branch.
 2. Run relevant local tests (`python -m pytest tests/`).
-3. Push to GitHub; Actions runs the pytest suite and the dashboard lint and build.
+3. Push to GitHub; Actions runs the pytest suite and the dashboard lint, unit tests, and build.
 4. Review and merge to `main`.
 5. On `main`, GitHub Actions deploys over Tailscale and SSH: the Pi's ingest and producer services are restarted, and the serving host's `live-consumer`, `historical-consumer`, and `api` containers are rebuilt.
 6. Apply what CI does not deploy by hand: Pi systemd units, the SQLite migration, Kafka host changes, Caddy, and the ESP32 firmware (see [`docs/deployment.md`](../docs/deployment.md)).

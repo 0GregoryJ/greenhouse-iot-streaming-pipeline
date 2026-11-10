@@ -22,7 +22,7 @@ Most of the pipeline is sensor-agnostic. A sensor that emits a measurement type 
 | Redis | No | New keys appear on first event. Keys never expire, so cleanup is manual |
 | [FastAPI](../api/main.py) (live) | No | It returns every `greenhouse:latest:*` hash. `value` must be numeric |
 | FastAPI history / Snowflake marts | Usually no | New `measurement_type` values appear in history after events reach Snowflake and dbt rebuilds marts. No API code change for an existing type |
-| [Dashboard](../dashboard/src/App.jsx) | Optional | New types get a generic label and unformatted value. Edit for a proper label, order, or number format |
+| [Dashboard](../dashboard/) | Optional | New types get a generic label and unformatted value. Edit `METRICS` / `formatValue` for a proper label, order, or number format (Live and History share those helpers) |
 | Tests | When you change code that has tests or add logic | See [Tests](#tests) |
 | Docs | Yes | See [Documentation updates](#documentation-updates) |
 
@@ -249,7 +249,7 @@ Follow [Data contracts](data-contracts.md#compatibility-rules); in short:
 2. Register version 3 in `SCHEMAS` in `gateway/ingest.py`. This is application code, so it needs review and a Pi deployment.
 3. Update the schema check and tests ([Tests](#tests)).
 4. Deploy the gateway first. Bump `SCHEMA_VERSION` in `main.py` only after ingest accepts v3.
-5. Make a deliberate choice about units: a new unit means the dashboard's `formatValue` switch needs a case to display it well.
+5. Make a deliberate choice about units: a new unit means the dashboard's `formatValue` switch in [`dashboard/src/lib/format.js`](../dashboard/src/lib/format.js) needs a case to display it well.
 
 Changes beyond a new type and unit (new fields, key changes) can require consumer, API, and dashboard work. Use the component table in [Data contracts](data-contracts.md#what-to-check-after-a-contract-change).
 
@@ -265,20 +265,22 @@ Events travel as opaque JSON after the gateway, so verify the following.
 | **Redis** | A key `greenhouse:latest:{gateway_id}:{sensor_id}:{measurement_type}` appears. Keys never expire |
 | **API (live)** | The reading appears in `GET /api/v1/sensors/latest` with a numeric `value`. A non-numeric stored value makes the whole endpoint return 503 |
 | **API (history)** | After warehouse load and `dbt run`, `GET /api/v1/history/series` returns points for that `sensor_id` and `measurement_type` |
-| **Dashboard** | The card appears at the next 3 s poll. Check how it renders (below) |
+| **Dashboard (Live)** | The card appears at the next 3 s poll. Check how it renders (below) |
+| **Dashboard (History)** | After warehouse load and `dbt run`, the History tab can chart the series. The sensor must also appear in the live endpoint for the picker (live-based discovery) |
 
-Dashboard behavior for new data, from `App.jsx`:
+Dashboard behavior for new data ([`dashboard/src/lib/metrics.js`](../dashboard/src/lib/metrics.js), [`format.js`](../dashboard/src/lib/format.js)):
 
 - Label and order come from the `METRICS` map. Unknown types fall back to the type name with underscores replaced, capitalized, and sorted last. `atmospheric_pressure` has its own `METRICS` entry.
-- `formatValue` has cases for `celsius`, `percent`, `hpa`, and `raw_capacitance`. Any other unit is shown as `String(value)` plus the unit text.
-- Any reading with `unit: "percent"` also renders a 0 to 100 meter bar. That suits humidity but may be wrong for a new quantity.
-- Staleness (older than 30 s) is automatic.
+- `formatValue` has cases for `celsius`, `percent`, `hpa`, and `raw_capacitance`. Any other unit is shown as a numeric string plus the unit text.
+- Any reading with `unit: "percent"` also renders a 0 to 100 meter bar on Live cards. That suits humidity but may be wrong for a new quantity.
+- Staleness (older than 30 s) is automatic on Live.
+- History uses the same labels/units; summaries and charts come from aggregated warehouse points, not live values.
 
 To polish the display, add a `METRICS` entry and a `formatValue` case. Neither is required for correct operation.
 
 ## Tests
 
-[`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) runs `pytest tests/` in CI on every push and pull request. The suites cover the schemas, ingest, cleanup, health, the live consumer, and the API ([Deployment](deployment.md#running-the-tests-locally)). The firmware, producer, and dashboard have no automated tests; the dashboard job runs lint and build.
+[`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml) runs `pytest tests/` in CI on every push and pull request. The suites cover the schemas, ingest, cleanup, health, the live consumer, and the API ([Deployment](deployment.md#running-the-tests-locally)). The firmware and producer have no automated tests. The dashboard job runs lint, focused unit tests (`npm run test` for history summary helpers), and build.
 
 For a new sensor:
 
@@ -358,7 +360,7 @@ Verify in order (details and commands in [Operations](operations.md#troubleshoot
 3. `journalctl -u greenhouse-ingest` shows `Saved:` and no `Invalid event:`.
 4. SQLite rows appear and `kafka_published_at` is set.
 5. The consumer logs `Processed event=…`, and Redis has the new key.
-6. `/api/v1/sensors/latest` and the dashboard show the reading.
+6. `/api/v1/sensors/latest` and the dashboard Live tab show the reading. After warehouse refresh, History can chart the same `sensor_id` / `measurement_type`.
 
 ### Rollback
 
@@ -392,12 +394,13 @@ Contract
     [ ] No: new schema version, SCHEMAS entry in ingest.py, SCHEMA_VERSION bump,
         data-contracts.md updated
 Downstream
-[ ] Dashboard: label, order, or format added only if wanted
+[ ] Dashboard: label, order, or format added only if wanted (Live + History share helpers)
 [ ] Capacity (rows per day) acceptable
 Tests and deploy
 [ ] pytest tests/ passes; schema tests extended and validation script run if the schema changed
+[ ] Dashboard npm run test / lint / build green if dashboard files changed
 [ ] Gateway deployed and tested with a synthetic event BEFORE firmware (schema changes)
-[ ] Firmware deployed; verified hop by hop to the dashboard
+[ ] Firmware deployed; verified hop by hop to the Live dashboard
 [ ] Test Redis keys removed; rollback path known
 Docs
 [ ] ESP32 README, root README, architecture, and data-contracts updated

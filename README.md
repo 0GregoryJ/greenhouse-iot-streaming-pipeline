@@ -57,14 +57,13 @@ flowchart LR
   s3 --> snow
   snow --> dbt
   dbt --> api
-  dash -->|"HTTPS poll"| api
+  dash -->|"HTTPS poll · live + history"| api
 
   ingest -.-> dlq[("Rejected events")]
   kafka -.-> flink["Flink rolling metrics"]
-  dash -.-> charts["History charts"]
 
   classDef planned fill:#fff,stroke:#999,stroke-dasharray:5 5,color:#777;
-  class dlq,flink,charts planned;
+  class dlq,flink planned;
 ```
 
 Solid boxes are implemented. Dashed boxes are on the [roadmap](#roadmap). Details: [Architecture](docs/architecture.md).
@@ -77,7 +76,7 @@ Solid boxes are implemented. Dashed boxes are on the [roadmap](#roadmap). Detail
 4. The live consumer updates the latest reading per sensor and measurement in Redis, committing its Kafka offset after the write.
 5. The historical consumer, in its own consumer group, batches events into gzip-compressed JSON Lines objects in S3 (partitioned by date and named by Kafka offset range) and commits only after the upload succeeds.
 6. The S3 archive is loaded into Snowflake. dbt builds staging, intermediate, and mart models (hourly and daily facts) with `event_id` deduplication.
-7. FastAPI serves live readings from Redis and historical series from Snowflake marts (`GET /api/v1/history/series`). The dashboard polls the live endpoint every 3 seconds and flags readings older than 30 seconds as stale.
+7. FastAPI serves live readings from Redis and historical series from Snowflake marts (`GET /api/v1/history/series`). The React dashboard has a **Live** tab (polls every 3 seconds; readings older than 30 seconds are stale) and a **History** tab (trends, weighted summaries, and period insights from the history API).
 
 Delivery is at-least-once, with deduplication by `event_id`.
 
@@ -87,9 +86,9 @@ Delivery is at-least-once, with deduplication by `event_id`.
 - **Delivery semantics.** Persistent QoS 1 sessions, an acknowledged idempotent Kafka producer, manual offset commits, and idempotent Redis updates (a Lua script rejects older timestamps).
 - **Versioned data contracts.** JSON Schema v1 and v2 coexist, and the gateway validates by `schema_version`.
 - **Replayable streaming.** Kafka retains 7 days of events, and two independent consumer groups read the same topic: a live view and a durable archive.
-- **Historical archive and warehouse.** Every event lands in S3 as date-partitioned, offset-ranged `.jsonl.gz` objects. dbt models in [`warehouse/`](warehouse/) turn the Snowflake raw table into hourly and daily marts; FastAPI exposes them on `/api/v1/history/series` with JWT key auth.
+- **Historical archive and warehouse.** Every event lands in S3 as date-partitioned, offset-ranged `.jsonl.gz` objects. dbt models in [`warehouse/`](warehouse/) turn the Snowflake raw table into hourly and daily marts; FastAPI exposes them on `/api/v1/history/series` with JWT key auth, and the dashboard History tab charts those series.
 - **Operations.** systemd services and timers, Docker Compose, a gateway health check with exit codes, and deployment verification scripts.
-- **Testing and CI/CD.** pytest suites for schemas, ingest, cleanup, health, the live consumer (offset-commit ordering, Redis timestamp guard), and the API against a real Redis. GitHub Actions runs them with a dashboard lint and build, then deploys to the Pi and EC2 over Tailscale and SSH on `main`.
+- **Testing and CI/CD.** pytest suites for schemas, ingest, cleanup, health, the live consumer (offset-commit ordering, Redis timestamp guard), and the API against a real Redis. GitHub Actions runs them with a dashboard lint, unit tests, and build, then deploys to the Pi and EC2 over Tailscale and SSH on `main`.
 - **Decision records.** The reasoning behind the main design choices is written down as [ADRs](docs/decisions/README.md).
 - **Networking and security basics.** Tailscale between hosts, authenticated MQTT, loopback-bound API behind Caddy HTTPS, and secrets kept out of Git.
 - **Embedded work.** MicroPython firmware with shared I²C sensors, NTP time sync, per-sensor failure isolation with automatic recovery, and non-blocking network retry.
@@ -119,11 +118,12 @@ Planned work, grouped by theme. Items are not scheduled.
 - **Safer triggers.** Path filters so documentation-only changes do not redeploy, and environment approvals for production.
 - **Broader deployment.** Pi systemd units, a migration runner for the SQLite database, Kafka host and Caddy configuration, and firmware releases.
 - **Terraform.** EC2 instances, security groups, DNS, and host bootstrap as code.
-- **Configuration as code.** Dashboard API URL from the environment (`VITE_API_URL`) and Netlify settings in the repository.
+- **Configuration as code.** Commit Netlify build settings (and any remaining site config) to the repository alongside `VITE_API_URL`.
 
 **Analytics and features**
 
-- **Dashboard history views.** Wire the existing `/api/v1/history/series` endpoint into trend charts and per-sensor history on the React dashboard.
+- **History metadata endpoint.** Expose warehouse-known sensors and measurement types so History can list devices that are offline or missing from Redis.
+- **Richer history UX.** Multi-metric comparison on one chart, and quality overlays from daily quality marts.
 - **Warehouse automation.** Schedule or further automate the S3 → Snowflake load and `dbt run` (profiles and orchestration live outside the API containers).
 - **Flink.** Event-time rolling-window metrics, such as 5-minute averages and moisture trends.
 - **More sensors.** Additional measurement types (for example light or CO₂) through new schema versions.
@@ -155,7 +155,7 @@ consumers/live/      Kafka to Redis consumer
 consumers/historical/ Kafka to S3 archive consumer
 api/                 FastAPI service (live Redis + Snowflake history)
 warehouse/           dbt project (staging, intermediate, marts)
-dashboard/           React / Vite dashboard
+dashboard/           React / Vite dashboard (Live + History tabs)
 infrastructure/      systemd, Mosquitto, Kafka, Caddy config and scripts
 tests/               pytest suites (schemas, gateway, consumer, API)
 .github/workflows/   CI and deployment workflow
