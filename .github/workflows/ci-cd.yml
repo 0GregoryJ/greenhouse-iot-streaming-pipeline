@@ -1,16 +1,25 @@
-
 name: CI/CD Pipeline
 
 on:
   push:
   pull_request:
+  workflow_dispatch:
+  schedule:
+    # Run dbt at 00:30, 06:30, 12:30, 18:30 UTC.
+    # Coordinate these times with Snowflake's COPY task.
+    - cron: "30 0,6,12,18 * * *"
 
 permissions:
   contents: read
 
 jobs:
+  # ------------------------------------------------------------
+  # Python CI
+  # ------------------------------------------------------------
+
   python-tests:
     name: Python Tests
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     services:
@@ -43,30 +52,25 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-
-          # Existing live consumer dependencies
           python -m pip install -r requirements/live.txt
-
-          # Existing FastAPI dependencies
           python -m pip install -r requirements/api.txt
-
-          # Gateway ingestion dependencies
           python -m pip install \
             paho-mqtt \
             python-dotenv \
-            jsonschema
-
-          # Testing dependencies
-          python -m pip install \
+            jsonschema \
             pytest \
             httpx
 
       - name: Run all Python tests
-        run: |
-          python -m pytest tests/ -v
+        run: python -m pytest tests/ -v
+
+  # ------------------------------------------------------------
+  # React CI
+  # ------------------------------------------------------------
 
   dashboard:
     name: Dashboard Lint and Build
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     defaults:
@@ -93,6 +97,94 @@ jobs:
       - name: Build dashboard
         run: npm run build
 
+  # ------------------------------------------------------------
+  # dbt: Scheduled Snowflake transformations
+  # ------------------------------------------------------------
+
+  dbt:
+    name: Build Snowflake Analytics Warehouse
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+
+    environment: production
+
+    concurrency:
+      group: greenhouse-dbt-production
+      cancel-in-progress: false
+
+    defaults:
+      run:
+        working-directory: warehouse
+
+    env:
+      DBT_PROFILES_DIR: ${{ github.workspace }}/warehouse/.ci-profiles
+
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ vars.SNOWFLAKE_DBT_USER }}
+      SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_DBT_ROLE }}
+      SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_DBT_KEY_PASSPHRASE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements/dbt.txt
+
+      - name: Install dbt
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r ../requirements/dbt.txt
+
+      - name: Configure Snowflake credentials
+        env:
+          PRIVATE_KEY: ${{ secrets.SNOWFLAKE_DBT_PRIVATE_KEY }}
+        run: |
+          set -eu
+          umask 077
+
+          mkdir -p "$DBT_PROFILES_DIR"
+
+          printf '%s\n' "$PRIVATE_KEY" \
+            > "$RUNNER_TEMP/snowflake_dbt_key.pem"
+
+          echo "SNOWFLAKE_PRIVATE_KEY_PATH=$RUNNER_TEMP/snowflake_dbt_key.pem" \
+            >> "$GITHUB_ENV"
+
+          cat > "$DBT_PROFILES_DIR/profiles.yml" <<'EOF'
+          warehouse:
+            target: prod
+            outputs:
+              prod:
+                type: snowflake
+                account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
+                user: "{{ env_var('SNOWFLAKE_USER') }}"
+                role: "{{ env_var('SNOWFLAKE_ROLE') }}"
+                warehouse: GREENHOUSE_WH
+                database: GREENHOUSE_ANALYTICS
+                schema: GREENHOUSE_DBT
+                threads: 4
+                authenticator: SNOWFLAKE_JWT
+                private_key_file: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+                private_key_file_pwd: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
+          EOF
+
+      - name: Verify Snowflake connection
+        run: dbt debug
+
+      - name: Build models and run tests
+        run: dbt build --target prod
+
+  # ------------------------------------------------------------
+  # Raspberry Pi deployment
+  # ------------------------------------------------------------
 
   deploy-pi:
     name: Deploy Raspberry Pi
@@ -157,6 +249,9 @@ jobs:
           echo "Pi deployment successful"
           REMOTE
 
+  # ------------------------------------------------------------
+  # EC2 #2 deployment
+  # ------------------------------------------------------------
 
   deploy-serving-ec2:
     name: Deploy Live Serving EC2
