@@ -168,7 +168,7 @@ export function HistoryChart({
               dataKey="rangeSpan"
               stackId="band"
               stroke="none"
-              fill="var(--live)"
+              fill="var(--accent)"
               fillOpacity={0.18}
               connectNulls={false}
               isAnimationActive={false}
@@ -177,10 +177,10 @@ export function HistoryChart({
             <Line
               type="monotone"
               dataKey="avg"
-              stroke="var(--live)"
+              stroke="var(--accent)"
               strokeWidth={2.25}
               dot={false}
-              activeDot={{ r: 4, fill: "var(--live)" }}
+              activeDot={{ r: 4, fill: "var(--accent)" }}
               connectNulls={false}
               isAnimationActive={false}
               name="Average"
