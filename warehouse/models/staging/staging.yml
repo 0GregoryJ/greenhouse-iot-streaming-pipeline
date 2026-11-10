@@ -1,0 +1,67 @@
+
+version: 2
+
+models:
+  - name: stg_sensor_events
+    description: >
+      Typed greenhouse sensor events extracted from the
+      RAW.SENSOR_EVENTS JSON payload. Deduplicated by
+      event_id, retaining the latest loaded record.
+
+    columns:
+      - name: event_id
+        description: Unique identifier assigned to a sensor event.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: schema_version
+        description: Version of the original event schema.
+        data_tests:
+          - not_null
+
+      - name: gateway_id
+        description: Identifier of the Raspberry Pi gateway.
+        data_tests:
+          - not_null
+
+      - name: sensor_id
+        description: Identifier of the sensor producing the reading.
+        data_tests:
+          - not_null
+
+      - name: measured_at
+        description: Timestamp when the reading was recorded.
+
+      - name: measurement_type
+        description: Type of environmental measurement.
+        data_tests:
+          - not_null
+
+      - name: value
+        description: Numeric sensor measurement, if parseable.
+
+      - name: unit
+        description: Unit supplied with the sensor event.
+
+      - name: kafka_topic
+        description: Kafka topic containing the original event.
+
+      - name: kafka_partition
+        description: Kafka partition containing the event.
+
+      - name: kafka_offset
+        description: Offset of the original Kafka record.
+
+      - name: source_file
+        description: S3 object from which Snowflake loaded the record.
+        data_tests:
+          - not_null
+
+      - name: source_file_row
+        description: Row number within the source object.
+
+      - name: loaded_at
+        description: Timestamp when Snowflake ingested the event.
+        data_tests:
+          - not_null

@@ -1,0 +1,123 @@
+
+version: 2
+
+models:
+  - name: fct_sensor_hourly
+    description: >
+      Hourly environmental statistics grouped by UTC hour,
+      gateway, sensor, measurement type, and unit.
+      Calculated from valid deduplicated sensor readings.
+
+    columns:
+      - name: measurement_hour_utc
+        data_tests:
+          - not_null
+
+      - name: gateway_id
+        data_tests:
+          - not_null
+
+      - name: sensor_id
+        data_tests:
+          - not_null
+
+      - name: measurement_type
+        data_tests:
+          - not_null
+
+      - name: unit
+        data_tests:
+          - not_null
+
+      - name: reading_count
+        data_tests:
+          - not_null
+
+      - name: avg_value
+        data_tests:
+          - not_null
+
+      - name: min_value
+        data_tests:
+          - not_null
+
+      - name: max_value
+        data_tests:
+          - not_null
+
+  - name: fct_sensor_daily
+    description: >
+      Daily environmental statistics grouped by UTC date,
+      gateway, sensor, measurement type, and unit.
+      Aggregated directly from individual valid readings.
+
+    columns:
+      - name: measurement_date_utc
+        data_tests:
+          - not_null
+
+      - name: gateway_id
+        data_tests:
+          - not_null
+
+      - name: sensor_id
+        data_tests:
+          - not_null
+
+      - name: measurement_type
+        data_tests:
+          - not_null
+
+      - name: unit
+        data_tests:
+          - not_null
+
+      - name: reading_count
+        data_tests:
+          - not_null
+
+      - name: avg_value
+        data_tests:
+          - not_null
+
+      - name: min_value
+        data_tests:
+          - not_null
+
+      - name: max_value
+        data_tests:
+          - not_null
+
+  - name: fct_sensor_quality_daily
+    description: >
+      Daily monitoring metrics for raw sensor records,
+      including duplicates, analytical validation failures,
+      and the maximum observed interval between measurements.
+      Invalid timestamps use Snowflake load date as a fallback.
+
+    columns:
+      - name: measurement_date_utc
+        data_tests:
+          - not_null
+
+      - name: raw_record_count
+        data_tests:
+          - not_null
+
+      - name: duplicate_record_count
+        data_tests:
+          - not_null
+
+      - name: invalid_record_count
+        data_tests:
+          - not_null
+
+      - name: valid_unique_reading_count
+        data_tests:
+          - not_null
+
+      - name: max_reading_gap_seconds
+        description: >
+          Longest observed interval between valid consecutive
+          readings, in seconds. May be null for a group with
+          no comparable valid readings.

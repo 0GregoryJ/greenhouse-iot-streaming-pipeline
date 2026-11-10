@@ -1,0 +1,90 @@
+[0m00:32:14.231732 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b1d56a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10cb6e850>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10cb6ead0>]}
+
+
+============================== 00:32:14.234750 | b85b09dc-507e-4cdd-83cc-940c11f6d0c9 ==============================
+[0m00:32:14.234750 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m00:32:14.235092 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'log_cache_events': 'False', 'quiet': 'False', 'version_check': 'True', 'printer_width': '80', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'log_format': 'default', 'debug': 'False', 'send_anonymous_usage_stats': 'True', 'log_path': 'logs', 'empty': 'None', 'cache_selected_only': 'False', 'no_print': 'None', 'introspect': 'True', 'target_path': 'None', 'partial_parse': 'True', 'indirect_selection': 'eager', 'fail_fast': 'False', 'write_json': 'True', 'invocation_command': 'dbt init warehouse', 'hints_enabled': 'True', 'use_colors': 'True', 'maximum_seed_size_mib': '1', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'use_experimental_parser': 'False', 'warn_error': 'None'}
+[0m00:32:14.235282 [debug] [MainThread]: Tracking: tracking
+[0m00:32:14.245003 [debug] [MainThread]: Starter project path: /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/.venv/lib/python3.14/site-packages/dbt/include/starter_project
+[0m00:32:14.249385 [info ] [MainThread]: Setting up your profile.
+[0m00:32:19.396836 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m00:32:19.397166 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m00:32:19.397331 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m00:37:14.982888 [info ] [MainThread]: Profile warehouse written to /Users/gregoryjoshua/.dbt/profiles.yml using target's profile_template.yml and your supplied values.
+[0m00:37:14.991704 [info ] [MainThread]: Running dbt debug to validate the project...
+[0m00:37:14.992680 [info ] [MainThread]: dbt version: 1.13.0-rc1
+[0m00:37:14.992981 [info ] [MainThread]: python version: 3.14.7
+[0m00:37:14.993337 [info ] [MainThread]: python path: /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/.venv/bin/python3.14
+[0m00:37:14.993793 [info ] [MainThread]: os info: macOS-26.6.2-arm64-arm-64bit-Mach-O
+[0m00:37:15.039244 [info ] [MainThread]: Using profiles dir at /Users/gregoryjoshua/.dbt
+[0m00:37:15.039542 [info ] [MainThread]: Using profiles.yml file at /Users/gregoryjoshua/.dbt/profiles.yml
+[0m00:37:15.039712 [info ] [MainThread]: Using dbt_project.yml file at /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/dbt_project.yml
+[0m00:37:15.040423 [info ] [MainThread]: adapter type: snowflake
+[0m00:37:15.040624 [info ] [MainThread]: adapter version: 1.12.5
+[0m00:37:15.103841 [info ] [MainThread]: Configuration:
+[0m00:37:15.104130 [info ] [MainThread]:   profiles.yml file [[32mOK found and valid[0m]
+[0m00:37:15.104430 [info ] [MainThread]:   dbt_project.yml file [[32mOK found and valid[0m]
+[0m00:37:15.104615 [info ] [MainThread]: Required dependencies:
+[0m00:37:15.104853 [debug] [MainThread]: Executing "git --help"
+[0m00:37:15.132140 [debug] [MainThread]: STDOUT: "b"usage: git [-v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]\n           [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]\n           [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--no-lazy-fetch]\n           [--no-optional-locks] [--no-advice] [--bare] [--git-dir=<path>]\n           [--work-tree=<path>] [--namespace=<name>] [--config-env=<name>=<envvar>]\n           <command> [<args>]\n\nThese are common Git commands used in various situations:\n\nstart a working area (see also: git help tutorial)\n   clone      Clone a repository into a new directory\n   init       Create an empty Git repository or reinitialize an existing one\n\nwork on the current change (see also: git help everyday)\n   add        Add file contents to the index\n   mv         Move or rename a file, a directory, or a symlink\n   restore    Restore working tree files\n   rm         Remove files from the working tree and from the index\n\nexamine the history and state (see also: git help revisions)\n   bisect     Use binary search to find the commit that introduced a bug\n   diff       Show changes between commits, commit and working tree, etc\n   grep       Print lines matching a pattern\n   log        Show commit logs\n   show       Show various types of objects\n   status     Show the working tree status\n\ngrow, mark and tweak your common history\n   backfill   Download missing objects in a partial clone\n   branch     List, create, or delete branches\n   commit     Record changes to the repository\n   merge      Join two or more development histories together\n   rebase     Reapply commits on top of another base tip\n   reset      Reset current HEAD to the specified state\n   switch     Switch branches\n   tag        Create, list, delete or verify a tag object signed with GPG\n\ncollaborate (see also: git help workflows)\n   fetch      Download objects and refs from another repository\n   pull       Fetch from and integrate with another repository or a local branch\n   push       Update remote refs along with associated objects\n\n'git help -a' and 'git help -g' list available subcommands and some\nconcept guides. See 'git help <command>' or 'git help <concept>'\nto read about a specific subcommand or concept.\nSee 'git help git' for an overview of the system.\n""
+[0m00:37:15.133089 [debug] [MainThread]: STDERR: "b''"
+[0m00:37:15.133346 [info ] [MainThread]:  - git [[32mOK found[0m]
+
+[0m00:37:15.133526 [info ] [MainThread]: Connection:
+[0m00:37:15.133715 [info ] [MainThread]:   account: WWHOXXP-ZV12681
+[0m00:37:15.133852 [info ] [MainThread]:   user: GREGORY
+[0m00:37:15.133978 [info ] [MainThread]:   database: GREENHOUSE_ANALYTICS
+[0m00:37:15.134105 [info ] [MainThread]:   warehouse: GREENHOUSE_WH
+[0m00:37:15.134230 [info ] [MainThread]:   role: ACCOUNTADMIN
+[0m00:37:15.134354 [info ] [MainThread]:   schema: GREENHOUSE_DBT
+[0m00:37:15.134477 [info ] [MainThread]:   authenticator: None
+[0m00:37:15.134603 [info ] [MainThread]:   oauth_client_id: None
+[0m00:37:15.134725 [info ] [MainThread]:   query_tag: None
+[0m00:37:15.134847 [info ] [MainThread]:   client_session_keep_alive: False
+[0m00:37:15.134969 [info ] [MainThread]:   host: None
+[0m00:37:15.135091 [info ] [MainThread]:   port: None
+[0m00:37:15.135210 [info ] [MainThread]:   proxy_host: None
+[0m00:37:15.135330 [info ] [MainThread]:   proxy_port: None
+[0m00:37:15.135450 [info ] [MainThread]:   protocol: None
+[0m00:37:15.135581 [info ] [MainThread]:   connect_retries: 1
+[0m00:37:15.135699 [info ] [MainThread]:   connect_timeout: None
+[0m00:37:15.135817 [info ] [MainThread]:   retry_on_database_errors: False
+[0m00:37:15.135938 [info ] [MainThread]:   retry_all: False
+[0m00:37:15.136076 [info ] [MainThread]:   insecure_mode: False
+[0m00:37:15.136272 [info ] [MainThread]:   reuse_connections: True
+[0m00:37:15.136433 [info ] [MainThread]:   s3_stage_vpce_dns_name: None
+[0m00:37:15.136577 [info ] [MainThread]:   workload_identity_provider: None
+[0m00:37:15.136709 [info ] [MainThread]:   workload_identity_entra_resource: None
+[0m00:37:15.136842 [info ] [MainThread]:   platform_detection_timeout_seconds: 0.0
+[0m00:37:15.137270 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m00:37:15.214700 [debug] [MainThread]: Acquiring new snowflake connection 'debug'
+[0m00:37:15.216509 [debug] [MainThread]: Using snowflake connection "debug"
+[0m00:37:15.216678 [debug] [MainThread]: On debug: select 1 as id
+[0m00:37:15.216820 [debug] [MainThread]: Opening a new connection, currently in state init
+[0m00:37:16.335391 [debug] [MainThread]: SQL status: SUCCESS 1 in 1.118 seconds
+[0m00:37:16.337951 [info ] [MainThread]:   Connection test: [[32mOK connection ok[0m]
+
+[0m00:37:16.338571 [info ] [MainThread]: [32mAll checks passed![0m
+[0m00:37:16.339369 [info ] [MainThread]: Your new dbt project "warehouse" was created!
+Initialized new project in /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/warehouse
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m00:37:16.351554 [debug] [MainThread]: Resource report: {"command_name": "init", "command_success": true, "command_wall_clock_time": 302.17606, "process_in_blocks": "0", "process_kernel_time": 0.280162, "process_mem_max_rss": "151732224", "process_out_blocks": "0", "process_user_time": 1.159644}
+[0m00:37:16.353547 [debug] [MainThread]: Command `dbt init` succeeded at 00:37:16.353309 after 302.18 seconds
+[0m00:37:16.354137 [debug] [MainThread]: Connection 'debug' was left open.
+[0m00:37:16.354560 [debug] [MainThread]: On debug: Close
+[0m00:37:16.534149 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c9a2190>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e320950>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e2269c0>]}
+[0m00:37:16.535578 [debug] [MainThread]: Flushing usage events
+[0m00:37:16.924394 [debug] [MainThread]: An error was encountered while trying to flush usage events

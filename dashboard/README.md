@@ -7,6 +7,7 @@ Live site: <https://greenhouse.gregoryjoshua.com>
 ## Behavior
 
 - Polls `GET /api/v1/sensors/latest` every 3 seconds (`POLL_INTERVAL_MS` in [`src/App.jsx`](src/App.jsx)).
+- Does not yet call `GET /api/v1/history/series` (Snowflake marts via the API); history charts are planned.
 - Renders one card per sensor and measurement type, labeled and ordered by the `METRICS` map. Unknown measurement types fall back to a generic label.
 - Marks a reading stale when its event timestamp is more than 30 seconds old (`STALE_AFTER_MS`).
 - Shows a status pill: **Connecting**, **Live** (at least one fresh reading), **Stale** (all readings stale), **No data**, or **Offline**. When a fetch fails, the last known readings stay on screen.

@@ -91,6 +91,7 @@ Unit files are grouped by the host they run on. The Pi units in `systemd/raspber
 | AWS EC2 #1 (`t3.small`) | Apache Kafka broker | systemd |
 | AWS EC2 #2 (`t4g.small`) | Live consumer, historical consumer, Redis, FastAPI | Docker Compose |
 | AWS S3 | Historical event archive | Bucket and IAM instance profile |
+| Snowflake | Warehouse + dbt marts queried by the API | Cloud account; models in `warehouse/` |
 | AWS EC2 #2 | Caddy reverse proxy | systemd |
 | Netlify | React/Vite dashboard | Git-based deployment |
 
@@ -247,7 +248,7 @@ The live backend consists of four Docker Compose services.
 | `live-consumer` | Consume Kafka telemetry and update Redis |
 | `historical-consumer` | Consume Kafka telemetry in its own group and archive gzip JSON Lines batches to S3 |
 | `redis` | Store the latest measurement per sensor and measurement type |
-| `api` | Expose read-only FastAPI endpoints |
+| `api` | Expose read-only FastAPI endpoints (live Redis + Snowflake history) |
 
 Docker Compose configuration is maintained at the repository root:
 
@@ -275,10 +276,15 @@ sudo docker compose logs -f api
 
 The historical consumer uses the EC2 instance profile for AWS credentials; no keys are stored in `.env`. The role needs `s3:PutObject` on the bucket's `raw/sensor_events/*` prefix, and the instance's IMDSv2 hop limit must be 2 so containers on Docker's bridge network can reach the metadata service.
 
+### Snowflake Access
+
+The API uses key-pair JWT auth. Compose mounts `SNOWFLAKE_KEY_HOST_PATH` into the container at `/run/secrets/snowflake_api_key.pem`. Account settings and the passphrase come from `.env`. dbt models live in [`warehouse/`](../warehouse/) and are run outside Compose.
+
 ### API Verification
 
 ```bash
 curl --fail http://127.0.0.1:8000/health
+curl --fail "http://127.0.0.1:8000/api/v1/history/series?sensor_id=bme280-001&measurement_type=air_temperature&period=7d"
 ```
 
 Redis communicates with other services through the internal Docker network and is not publicly exposed.

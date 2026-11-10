@@ -30,7 +30,8 @@ Placeholders in angle brackets, such as `<TAILSCALE_IP>`, are values from your e
 | Historical consumer | `sudo docker compose logs --tail 20 historical-consumer` | `Uploaded N events to s3://…` and `Committed partition=0 next_offset=…` at least every 5 minutes |
 | S3 archive | `aws s3 ls s3://$S3_BUCKET/raw/sensor_events/year=$(date -u +%Y)/month=$(date -u +%m)/day=$(date -u +%d)/ --recursive` | New objects appearing |
 | Redis | `redis-cli --scan` | One key per sensor/measurement |
-| API | `curl -s http://127.0.0.1:8000/health` | `{"status":"ok"}` |
+| API (live) | `curl -s http://127.0.0.1:8000/health` | `{"status":"ok"}` (Redis only; does not check Snowflake) |
+| API (history) | `curl -s "http://127.0.0.1:8000/api/v1/history/series?sensor_id=bme280-001&measurement_type=air_temperature&period=7d"` | HTTP 200 with `points` (or `count: 0` if the mart has no rows yet) |
 | Public API | `curl -s https://api.gregoryjoshua.com/health` | `{"status":"ok"}` |
 | Dashboard | Browser | "Live" status pill, readings under 30 s old |
 
@@ -77,6 +78,7 @@ Messages worth knowing:
 | Historical | `Committed partition=N next_offset=M` | Offsets up to M-1 are durable in S3 |
 | Historical | Traceback ending in `ValueError: Missing required field` or `JSONDecodeError` | A malformed event stopped the consumer; it will restart and hit the same event (see [Historical consumer failures](#historical-consumer-failures)) |
 | Historical | `botocore` `NoCredentialsError` or `AccessDenied` | Instance profile missing, IMDS hop limit too low, or bucket policy; see [Deployment](deployment.md#initial-setup-1) |
+| API | `Historical analytics query failed` (traceback in API logs) | Snowflake connect/query failed; see [Historical API and Snowflake](#historical-api-and-snowflake) |
 
 ## MQTT
 
@@ -224,7 +226,42 @@ for r in json.load(sys.stdin)["readings"]:
 '
 ```
 
-Each Redis hash holds `value`, `unit`, `timestamp`, `timestamp_ms`, `event_id`, `sensor_id`, `gateway_id`, `measurement_type`. `/health` returns 503 when Redis is unreachable, so it tests Redis, not data freshness.
+Each Redis hash holds `value`, `unit`, `timestamp`, `timestamp_ms`, `event_id`, `sensor_id`, `gateway_id`, `measurement_type`. `/health` returns 503 when Redis is unreachable, so it tests Redis, not data freshness or Snowflake.
+
+History series (Snowflake marts; does not use Redis):
+
+```bash
+curl -s "http://127.0.0.1:8000/api/v1/history/series?sensor_id=bme280-001&measurement_type=air_temperature&period=7d" \
+  | python3 -m json.tool
+```
+
+`period` must be one of `24h`, `7d`, or `30d`. The response includes `resolution` (`hour` or `day`), `unit`, `count`, and `points[]` with `timestamp`, `avg`, `min`, `max`, and `count`.
+
+## Historical API and Snowflake
+
+On the serving host:
+
+```bash
+# Key mounted into the API container?
+sudo docker compose exec api ls -l /run/secrets/snowflake_api_key.pem
+
+# Env present (values redacted in logs; just confirm names)
+sudo docker compose exec api printenv | grep '^SNOWFLAKE_' | cut -d= -f1
+
+sudo docker compose logs --tail 100 api
+```
+
+| Observation | Cause and action |
+| --- | --- |
+| `/health` OK, history returns 503 | Snowflake path only. Read the API traceback |
+| `Could not read private key file` / `No such file` | Missing Compose volume or wrong `SNOWFLAKE_KEY_HOST_PATH`. Confirm the host file exists and recreate the API container |
+| Permission denied reading the PEM | Key not readable by `appuser` in the container. Relax host permissions (for example `chmod 644`) or adjust ownership |
+| JWT / authentication errors | Wrong passphrase, account locator, user, or public key not registered for the Snowflake user |
+| SQL / object does not exist | Marts missing or `SNOWFLAKE_SCHEMA` does not match the dbt target schema. Run `dbt run` in [`warehouse/`](../warehouse/) |
+| HTTP 422 on history | Invalid `period` (not `24h`/`7d`/`30d`) or empty query params |
+| Empty `points` with 200 | Query succeeded; no rows in the selected window for that sensor/measurement |
+
+Live endpoints keep working when Snowflake is down. History is on-demand and is not part of `/health`.
 
 ## Gateway health monitoring
 
@@ -448,6 +485,7 @@ df -h gateway/data
 | Missing `KAFKA_BOOTSTRAP_SERVERS` | `docker compose` refuses to start (`Kafka address required`) | Set it in `.env` |
 
 ### Historical consumer failures
+
 
 On the serving host:
 

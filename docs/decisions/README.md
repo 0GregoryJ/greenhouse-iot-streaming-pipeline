@@ -18,6 +18,7 @@ Architecture Decision Records (ADRs) capture a significant architectural decisio
 | [0010](0010-per-sensor-failure-isolation-in-firmware.md) | Per-sensor failure isolation and non-blocking retry in the firmware | Accepted |
 | [0011](0011-dashboard-polls-a-read-only-api.md) | Dashboard polls a read-only API | Accepted |
 | [0012](0012-historical-archive-to-s3.md) | Historical archive as gzip JSON Lines batches in S3 | Accepted |
+| [0013](0013-snowflake-history-api-with-jwt-key.md) | Snowflake history API with JWT key-pair auth | Accepted |
 
 ## Format
 

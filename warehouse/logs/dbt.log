@@ -1,0 +1,2634 @@
+[0m00:42:38.564041 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c9956a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e396710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e396990>]}
+
+
+============================== 00:42:38.566931 | f9a51e16-df84-4174-b1d8-bd73aad30588 ==============================
+[0m00:42:38.566931 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m00:42:38.567256 [debug] [MainThread]: running dbt with arguments {'write_json': 'True', 'log_cache_events': 'False', 'empty': 'False', 'hints_enabled': 'True', 'static_parser': 'True', 'warn_error': 'None', 'log_path': '/Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/logs', 'introspect': 'True', 'target_path': 'None', 'invocation_command': 'dbt run --select stg_sensor_events', 'printer_width': '80', 'maximum_seed_size_mib': '1', 'log_format': 'default', 'use_experimental_parser': 'False', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'cache_selected_only': 'False', 'use_colors': 'True', 'quiet': 'False', 'send_anonymous_usage_stats': 'True', 'indirect_selection': 'eager', 'fail_fast': 'False', 'version_check': 'True', 'debug': 'False', 'no_print': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'partial_parse': 'True'}
+[0m00:42:38.567488 [debug] [MainThread]: Tracking: tracking
+[0m00:42:38.692207 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m00:42:38.692523 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m00:42:38.692685 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m00:42:38.832148 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10eb09f30>]}
+[0m00:42:38.862317 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ee73f00>]}
+[0m00:42:38.862982 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m00:42:38.925658 [debug] [MainThread]: checksum: c7a5a50a5fd40c6064fab6579648b945bc1600075318ee408521527386663ab6, vars: {}, profile: warehouse, target: dev, version: 1.13.0rc1
+[0m00:42:38.926190 [info ] [MainThread]: Unable to do partial parsing because saved manifest not found. Starting full parse.
+[0m00:42:38.926427 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ed31e50>]}
+[0m00:42:39.553163 [warn ] [MainThread]: [[33mWARNING[0m]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
+There are 2 unused configuration paths:
+- models.warehouse.staging
+- models.warehouse.marts
+[0m00:42:39.555151 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10fb018b0>]}
+[0m00:42:39.600939 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m00:42:39.602816 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m00:42:39.617434 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m00:42:39.624181 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11019f770>]}
+[0m00:42:39.624438 [info ] [MainThread]: Found 1 model, 1 source, 563 macros
+[0m00:42:39.624613 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10fcbde60>]}
+[0m00:42:39.625371 [info ] [MainThread]: 
+[0m00:42:39.625549 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m00:42:39.625683 [info ] [MainThread]: 
+[0m00:42:39.625937 [debug] [MainThread]: Acquiring new snowflake connection 'master'
+[0m00:42:39.626355 [debug] [ThreadPool]: Acquiring new snowflake connection 'list_GREENHOUSE_ANALYTICS'
+[0m00:42:39.634120 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS"
+[0m00:42:39.634362 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS: show terse schemas in database GREENHOUSE_ANALYTICS
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS"} */
+[0m00:42:39.634521 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m00:42:40.763247 [debug] [ThreadPool]: SQL status: SUCCESS 5 in 1.129 seconds
+[0m00:42:40.768488 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS, now create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT)
+[0m00:42:40.768950 [debug] [ThreadPool]: Creating schema "database: "GREENHOUSE_ANALYTICS"
+schema: "GREENHOUSE_DBT"
+"
+[0m00:42:40.772373 [debug] [ThreadPool]: Using snowflake connection "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT"
+[0m00:42:40.772662 [debug] [ThreadPool]: On create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT: create schema if not exists GREENHOUSE_ANALYTICS.GREENHOUSE_DBT
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT"} */
+[0m00:42:40.990880 [debug] [ThreadPool]: SQL status: SUCCESS 1 in 0.218 seconds
+[0m00:42:40.996876 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT, now list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT)
+[0m00:42:41.008677 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT"
+[0m00:42:41.008992 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT"} */;
+[0m00:42:41.144235 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.135 seconds
+[0m00:42:41.148117 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT"
+[0m00:42:41.148316 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT"} */
+[0m00:42:41.271808 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.123 seconds
+[0m00:42:41.276937 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1102c9250>]}
+[0m00:42:41.281111 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.stg_sensor_events
+[0m00:42:41.281942 [info ] [Thread-1 (]: 1 of 1 START sql view model GREENHOUSE_DBT.stg_sensor_events ................... [RUN]
+[0m00:42:41.282606 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT, now model.greenhouse_analytics.stg_sensor_events)
+[0m00:42:41.283106 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.stg_sensor_events
+[0m00:42:41.290769 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.stg_sensor_events"
+[0m00:42:41.292022 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.stg_sensor_events
+[0m00:42:41.316488 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.stg_sensor_events"
+[0m00:42:41.317468 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.stg_sensor_events"
+[0m00:42:41.317773 [debug] [Thread-1 (]: On model.greenhouse_analytics.stg_sensor_events: create or replace   view GREENHOUSE_ANALYTICS.GREENHOUSE_DBT.stg_sensor_events
+  
+  
+  
+  
+  as (
+    WITH source_events AS (
+    SELECT
+        EVENT:event_id::VARCHAR AS event_id,
+        EVENT:schema_version::INTEGER AS schema_version,
+        EVENT:gateway_id::VARCHAR AS gateway_id,
+        EVENT:sensor_id::VARCHAR AS sensor_id,
+        TRY_TO_TIMESTAMP_TZ(EVENT:timestamp::VARCHAR) AS measured_at,
+        EVENT:measurement_type::VARCHAR AS measurement_type,
+        TRY_TO_DOUBLE(EVENT:value::VARCHAR) AS value,
+        EVENT:unit::VARCHAR AS unit,
+
+        EVENT:_kafka_topic::VARCHAR AS kafka_topic,
+        EVENT:_kafka_partition::INTEGER AS kafka_partition,
+        EVENT:_kafka_offset::BIGINT AS kafka_offset,
+
+        SOURCE_FILE AS source_file,
+        SOURCE_FILE_ROW AS source_file_row,
+        LOADED_AT AS loaded_at
+
+    FROM GREENHOUSE_ANALYTICS.RAW.SENSOR_EVENTS
+),
+
+deduplicated AS (
+    SELECT *
+    FROM source_events
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY event_id
+        ORDER BY loaded_at DESC, source_file DESC, source_file_row DESC
+    ) = 1
+)
+
+SELECT *
+FROM deduplicated
+  )
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.stg_sensor_events"} */;
+[0m00:42:42.241577 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.923 seconds
+[0m00:42:42.273441 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': 'f9a51e16-df84-4174-b1d8-bd73aad30588', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ce42990>]}
+[0m00:42:42.274020 [info ] [Thread-1 (]: 1 of 1 OK created sql view model GREENHOUSE_DBT.stg_sensor_events .............. [[32mSUCCESS 1[0m in 0.99s]
+[0m00:42:42.274469 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.stg_sensor_events
+[0m00:42:42.275365 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m00:42:42.275587 [debug] [MainThread]: Connection 'model.greenhouse_analytics.stg_sensor_events' was left open.
+[0m00:42:42.275799 [debug] [MainThread]: On model.greenhouse_analytics.stg_sensor_events: Close
+[0m00:42:42.469316 [info ] [MainThread]: 
+[0m00:42:42.470897 [info ] [MainThread]: Finished running 1 view model in 0 hours 0 minutes and 2.84 seconds (2.84s).
+[0m00:42:42.472370 [debug] [MainThread]: Command end result
+[0m00:42:42.517523 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m00:42:42.519123 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m00:42:42.520608 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m00:42:42.525485 [debug] [MainThread]: Wrote artifact RunExecutionResult to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/run_results.json
+[0m00:42:42.525734 [info ] [MainThread]: 
+[0m00:42:42.525997 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m00:42:42.526187 [info ] [MainThread]: 
+[0m00:42:42.526393 [info ] [MainThread]: Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=1
+[0m00:42:42.529270 [debug] [MainThread]: Resource report: {"command_name": "run", "command_success": true, "command_wall_clock_time": 4.020188, "process_in_blocks": "0", "process_kernel_time": 0.259852, "process_mem_max_rss": "188137472", "process_out_blocks": "0", "process_user_time": 1.854281}
+[0m00:42:42.529757 [debug] [MainThread]: Command `dbt run` succeeded at 00:42:42.529698 after 4.02 seconds
+[0m00:42:42.530017 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1102b6b70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1102a74a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11027c5d0>]}
+[0m00:42:42.530245 [debug] [MainThread]: Flushing usage events
+[0m00:42:42.879968 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m00:51:15.664462 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b2716a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10cc6e710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10cc6e990>]}
+
+
+============================== 00:51:15.667597 | d6da1f37-363a-4f67-ba00-b6e7e946a9a6 ==============================
+[0m00:51:15.667597 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m00:51:15.667938 [debug] [MainThread]: running dbt with arguments {'fail_fast': 'False', 'empty': 'False', 'hints_enabled': 'True', 'maximum_seed_size_mib': '1', 'log_format': 'default', 'quiet': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'no_print': 'None', 'debug': 'False', 'use_colors': 'True', 'indirect_selection': 'eager', 'log_cache_events': 'False', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'partial_parse': 'True', 'introspect': 'True', 'printer_width': '80', 'cache_selected_only': 'False', 'invocation_command': 'dbt run --select stg_sensor_events', 'warn_error': 'None', 'target_path': 'None', 'version_check': 'True', 'send_anonymous_usage_stats': 'True', 'use_experimental_parser': 'False', 'log_path': '/Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/logs', 'static_parser': 'True', 'write_json': 'True'}
+[0m00:51:15.668156 [debug] [MainThread]: Tracking: tracking
+[0m00:51:15.793240 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m00:51:15.793569 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m00:51:15.793728 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m00:51:15.926441 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d3e5f30>]}
+[0m00:51:15.956325 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d74ff00>]}
+[0m00:51:15.956969 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m00:51:16.018066 [debug] [MainThread]: checksum: c7a5a50a5fd40c6064fab6579648b945bc1600075318ee408521527386663ab6, vars: {}, profile: warehouse, target: dev, version: 1.13.0rc1
+[0m00:51:16.065375 [info ] [MainThread]: Unable to do partial parsing because a project config has changed
+[0m00:51:16.065680 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e6e9c50>]}
+[0m00:51:16.672160 [warn ] [MainThread]: [[33mWARNING[0m]: Configuration paths exist in your dbt_project.yml file which do not apply to any resources.
+There are 1 unused configuration paths:
+- models.greenhouse_analytics.marts
+[0m00:51:16.674102 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e62ec60>]}
+[0m00:51:16.720032 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m00:51:16.721812 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m00:51:16.736103 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m00:51:16.742650 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10eb33690>]}
+[0m00:51:16.742896 [info ] [MainThread]: Found 1 model, 1 source, 563 macros
+[0m00:51:16.743075 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ebb32b0>]}
+[0m00:51:16.743849 [info ] [MainThread]: 
+[0m00:51:16.744024 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m00:51:16.744158 [info ] [MainThread]: 
+[0m00:51:16.744415 [debug] [MainThread]: Acquiring new snowflake connection 'master'
+[0m00:51:16.744865 [debug] [ThreadPool]: Acquiring new snowflake connection 'list_GREENHOUSE_ANALYTICS'
+[0m00:51:16.752834 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS"
+[0m00:51:16.753054 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS: show terse schemas in database GREENHOUSE_ANALYTICS
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS"} */
+[0m00:51:16.753203 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m00:51:18.174484 [debug] [ThreadPool]: SQL status: SUCCESS 6 in 1.421 seconds
+[0m00:51:18.181345 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS, now create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging)
+[0m00:51:18.182020 [debug] [ThreadPool]: Creating schema "database: "GREENHOUSE_ANALYTICS"
+schema: "GREENHOUSE_DBT_staging"
+"
+[0m00:51:18.186697 [debug] [ThreadPool]: Using snowflake connection "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"
+[0m00:51:18.187106 [debug] [ThreadPool]: On create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging: create schema if not exists GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"} */
+[0m00:51:18.367150 [debug] [ThreadPool]: SQL status: SUCCESS 1 in 0.180 seconds
+[0m00:51:18.369628 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging, now list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging)
+[0m00:51:18.381022 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"
+[0m00:51:18.381325 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"} */;
+[0m00:51:18.646042 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.264 seconds
+[0m00:51:18.656192 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"
+[0m00:51:18.656764 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"} */
+[0m00:51:19.548401 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.891 seconds
+[0m00:51:19.550663 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ec00d10>]}
+[0m00:51:19.553632 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.stg_sensor_events
+[0m00:51:19.554041 [info ] [Thread-1 (]: 1 of 1 START sql view model GREENHOUSE_DBT_staging.stg_sensor_events ........... [RUN]
+[0m00:51:19.554359 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging, now model.greenhouse_analytics.stg_sensor_events)
+[0m00:51:19.554600 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.stg_sensor_events
+[0m00:51:19.558830 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.stg_sensor_events"
+[0m00:51:19.559308 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.stg_sensor_events
+[0m00:51:19.577535 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.stg_sensor_events"
+[0m00:51:19.578169 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.stg_sensor_events"
+[0m00:51:19.578426 [debug] [Thread-1 (]: On model.greenhouse_analytics.stg_sensor_events: create or replace   view GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+  
+  
+  
+  
+  as (
+    WITH source_events AS (
+    SELECT
+        EVENT:event_id::VARCHAR AS event_id,
+        EVENT:schema_version::INTEGER AS schema_version,
+        EVENT:gateway_id::VARCHAR AS gateway_id,
+        EVENT:sensor_id::VARCHAR AS sensor_id,
+        TRY_TO_TIMESTAMP_TZ(EVENT:timestamp::VARCHAR) AS measured_at,
+        EVENT:measurement_type::VARCHAR AS measurement_type,
+        TRY_TO_DOUBLE(EVENT:value::VARCHAR) AS value,
+        EVENT:unit::VARCHAR AS unit,
+
+        EVENT:_kafka_topic::VARCHAR AS kafka_topic,
+        EVENT:_kafka_partition::INTEGER AS kafka_partition,
+        EVENT:_kafka_offset::BIGINT AS kafka_offset,
+
+        SOURCE_FILE AS source_file,
+        SOURCE_FILE_ROW AS source_file_row,
+        LOADED_AT AS loaded_at
+
+    FROM GREENHOUSE_ANALYTICS.RAW.SENSOR_EVENTS
+),
+
+deduplicated AS (
+    SELECT *
+    FROM source_events
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY event_id
+        ORDER BY loaded_at DESC, source_file DESC, source_file_row DESC
+    ) = 1
+)
+
+SELECT *
+FROM deduplicated
+  )
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.stg_sensor_events"} */;
+[0m00:51:20.086845 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.508 seconds
+[0m00:51:20.115982 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': 'd6da1f37-363a-4f67-ba00-b6e7e946a9a6', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b70e990>]}
+[0m00:51:20.116518 [info ] [Thread-1 (]: 1 of 1 OK created sql view model GREENHOUSE_DBT_staging.stg_sensor_events ...... [[32mSUCCESS 1[0m in 0.56s]
+[0m00:51:20.116950 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.stg_sensor_events
+[0m00:51:20.117765 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m00:51:20.117980 [debug] [MainThread]: Connection 'model.greenhouse_analytics.stg_sensor_events' was left open.
+[0m00:51:20.118190 [debug] [MainThread]: On model.greenhouse_analytics.stg_sensor_events: Close
+[0m00:51:20.331894 [info ] [MainThread]: 
+[0m00:51:20.332442 [info ] [MainThread]: Finished running 1 view model in 0 hours 0 minutes and 3.59 seconds (3.59s).
+[0m00:51:20.333119 [debug] [MainThread]: Command end result
+[0m00:51:20.361838 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m00:51:20.363315 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m00:51:20.364551 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m00:51:20.369236 [debug] [MainThread]: Wrote artifact RunExecutionResult to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/run_results.json
+[0m00:51:20.369459 [info ] [MainThread]: 
+[0m00:51:20.369691 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m00:51:20.369869 [info ] [MainThread]: 
+[0m00:51:20.370071 [info ] [MainThread]: Done. PASS=1 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=1
+[0m00:51:20.372937 [debug] [MainThread]: Resource report: {"command_name": "run", "command_success": true, "command_wall_clock_time": 4.761109, "process_in_blocks": "0", "process_kernel_time": 0.239114, "process_mem_max_rss": "190234624", "process_out_blocks": "0", "process_user_time": 1.828571}
+[0m00:51:20.373371 [debug] [MainThread]: Command `dbt run` succeeded at 00:51:20.373316 after 4.76 seconds
+[0m00:51:20.373610 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ebf54f0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ebe7410>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ebc4250>]}
+[0m00:51:20.373822 [debug] [MainThread]: Flushing usage events
+[0m00:51:20.701765 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:20:19.166526 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x108e396a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a7ce850>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a7cead0>]}
+
+
+============================== 19:20:19.169911 | be2331ea-215b-483d-a06d-82ffd97e6aeb ==============================
+[0m19:20:19.169911 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m19:20:19.170240 [debug] [MainThread]: running dbt with arguments {'version_check': 'True', 'log_cache_events': 'False', 'cache_selected_only': 'False', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'fail_fast': 'False', 'invocation_command': 'dbt parse', 'use_colors': 'True', 'printer_width': '80', 'hints_enabled': 'True', 'debug': 'False', 'introspect': 'True', 'indirect_selection': 'eager', 'quiet': 'False', 'maximum_seed_size_mib': '1', 'write_json': 'True', 'send_anonymous_usage_stats': 'True', 'log_format': 'default', 'target_path': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'empty': 'None', 'no_print': 'None', 'warn_error': 'None', 'static_parser': 'True', 'use_experimental_parser': 'False', 'log_path': '/Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/logs', 'partial_parse': 'True'}
+[0m19:20:19.170479 [debug] [MainThread]: Tracking: tracking
+[0m19:20:19.328665 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m19:20:19.328994 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m19:20:19.329161 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m19:20:19.489261 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': 'be2331ea-215b-483d-a06d-82ffd97e6aeb', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b2782b0>]}
+[0m19:20:19.522759 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': 'be2331ea-215b-483d-a06d-82ffd97e6aeb', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1099a1590>]}
+[0m19:20:19.523735 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m19:20:19.589877 [debug] [MainThread]: checksum: c7a5a50a5fd40c6064fab6579648b945bc1600075318ee408521527386663ab6, vars: {}, profile: warehouse, target: dev, version: 1.13.0rc1
+[0m19:20:19.640979 [info ] [MainThread]: Unable to do partial parsing because a project config has changed
+[0m19:20:19.641288 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'partial_parser', 'label': 'be2331ea-215b-483d-a06d-82ffd97e6aeb', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c2cc350>]}
+[0m19:20:20.438971 [warn ] [MainThread]: [[33mWARNING[0m]: Did not find matching node for patch with name 'fct_sensor_daily' in the 'models' section of file 'models/marts/marts.yml'
+[0m19:20:20.490943 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.assert_unique_daily_grain' (tests/assert_unique_daily_grain.sql) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.491484 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_measurement_date_utc.27c5f9cc11' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.491763 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_gateway_id.a99d093eed' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.492044 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_sensor_id.288cb82ffc' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.492227 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_measurement_type.8e4a45d3d1' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.492438 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_unit.83e63d0432' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.492685 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_reading_count.6fa8cbfa2d' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.492864 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_avg_value.864a110bf1' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.493052 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_min_value.4356f1353e' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.493217 [warn ] [MainThread]: [[33mWARNING[0m]: Test 'test.greenhouse_analytics.not_null_fct_sensor_daily_max_value.fe97937f66' (models/marts/marts.yml) depends on a node named 'fct_sensor_daily' in package '' which was not found
+[0m19:20:20.559328 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': 'be2331ea-215b-483d-a06d-82ffd97e6aeb', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c5927b0>]}
+[0m19:20:20.561610 [info ] [MainThread]: Performance info: /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/perf_info.json
+[0m19:20:20.632612 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m19:20:20.634537 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m19:20:20.648306 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m19:20:20.655276 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 1.5550144, "process_in_blocks": "0", "process_kernel_time": 0.298493, "process_mem_max_rss": "176193536", "process_out_blocks": "0", "process_user_time": 1.988693}
+[0m19:20:20.655825 [debug] [MainThread]: Command `dbt parse` succeeded at 19:20:20.655772 after 1.56 seconds
+[0m19:20:20.656035 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a779710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c5b26d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a7d8050>]}
+[0m19:20:20.656216 [debug] [MainThread]: Flushing usage events
+[0m19:20:21.240172 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:21:15.045018 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10888d6a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a222850>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10a222ad0>]}
+
+
+============================== 19:21:15.048473 | 97ee15c0-7b11-43e0-ab40-49a5944a9ec0 ==============================
+[0m19:21:15.048473 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m19:21:15.048829 [debug] [MainThread]: running dbt with arguments {'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'indirect_selection': 'eager', 'target_path': 'None', 'log_format': 'default', 'static_parser': 'True', 'invocation_command': 'dbt parse', 'log_cache_events': 'False', 'use_experimental_parser': 'False', 'use_colors': 'True', 'printer_width': '80', 'hints_enabled': 'True', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'warn_error': 'None', 'quiet': 'False', 'maximum_seed_size_mib': '1', 'version_check': 'True', 'introspect': 'True', 'empty': 'None', 'fail_fast': 'False', 'partial_parse': 'True', 'cache_selected_only': 'False', 'debug': 'False', 'write_json': 'True', 'send_anonymous_usage_stats': 'True', 'log_path': '/Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/logs', 'no_print': 'None'}
+[0m19:21:15.049062 [debug] [MainThread]: Tracking: tracking
+[0m19:21:15.191968 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m19:21:15.192312 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m19:21:15.192480 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m19:21:15.360392 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '97ee15c0-7b11-43e0-ab40-49a5944a9ec0', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10acd02b0>]}
+[0m19:21:15.394445 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '97ee15c0-7b11-43e0-ab40-49a5944a9ec0', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1093f5590>]}
+[0m19:21:15.395398 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m19:21:15.464772 [debug] [MainThread]: checksum: c7a5a50a5fd40c6064fab6579648b945bc1600075318ee408521527386663ab6, vars: {}, profile: warehouse, target: dev, version: 1.13.0rc1
+[0m19:21:15.572161 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 1 files added, 0 files changed.
+[0m19:21:15.572624 [debug] [MainThread]: Partial parsing: added file: greenhouse_analytics://models/marts/fct_sensor_daily.sql
+[0m19:21:15.734148 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '97ee15c0-7b11-43e0-ab40-49a5944a9ec0', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b9e8750>]}
+[0m19:21:15.736660 [info ] [MainThread]: Performance info: /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/perf_info.json
+[0m19:21:15.811455 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m19:21:15.813363 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m19:21:15.826662 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m19:21:15.829114 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 0.8500155, "process_in_blocks": "0", "process_kernel_time": 0.249153, "process_mem_max_rss": "168542208", "process_out_blocks": "0", "process_user_time": 1.306939}
+[0m19:21:15.829518 [debug] [MainThread]: Command `dbt parse` succeeded at 19:21:15.829456 after 0.85 seconds
+[0m19:21:15.829734 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b9d4d70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10b9d4b90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10bef49f0>]}
+[0m19:21:15.829936 [debug] [MainThread]: Flushing usage events
+[0m19:21:16.246757 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:21:36.941340 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c8996a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e232850>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e232ad0>]}
+
+
+============================== 19:21:36.945810 | 80af7954-9b3e-4381-b440-fe7f6b0fd189 ==============================
+[0m19:21:36.945810 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m19:21:36.946205 [debug] [MainThread]: running dbt with arguments {'fail_fast': 'False', 'static_parser': 'True', 'indirect_selection': 'eager', 'send_anonymous_usage_stats': 'True', 'use_experimental_parser': 'False', 'warn_error': 'None', 'write_json': 'True', 'use_colors': 'True', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'log_format': 'default', 'empty': 'None', 'version_check': 'True', 'printer_width': '80', 'hints_enabled': 'True', 'no_print': 'None', 'debug': 'False', 'quiet': 'False', 'maximum_seed_size_mib': '1', 'invocation_command': 'dbt parse', 'introspect': 'True', 'log_cache_events': 'False', 'partial_parse': 'True', 'log_path': '/Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/logs', 'cache_selected_only': 'False', 'target_path': 'None'}
+[0m19:21:36.946455 [debug] [MainThread]: Tracking: tracking
+[0m19:21:37.081949 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m19:21:37.082340 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m19:21:37.082510 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m19:21:37.219981 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '80af7954-9b3e-4381-b440-fe7f6b0fd189', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ecd82b0>]}
+[0m19:21:37.251425 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '80af7954-9b3e-4381-b440-fe7f6b0fd189', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d3fd590>]}
+[0m19:21:37.252115 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m19:21:37.315369 [debug] [MainThread]: checksum: c7a5a50a5fd40c6064fab6579648b945bc1600075318ee408521527386663ab6, vars: {}, profile: warehouse, target: dev, version: 1.13.0rc1
+[0m19:21:37.406636 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m19:21:37.406881 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m19:21:37.407029 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m19:21:37.412317 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '80af7954-9b3e-4381-b440-fe7f6b0fd189', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10fdede50>]}
+[0m19:21:37.414114 [info ] [MainThread]: Performance info: /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/perf_info.json
+[0m19:21:37.506073 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m19:21:37.507820 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m19:21:37.519494 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m19:21:37.522224 [debug] [MainThread]: Resource report: {"command_name": "parse", "command_success": true, "command_wall_clock_time": 0.6387455, "process_in_blocks": "0", "process_kernel_time": 0.219004, "process_mem_max_rss": "164036608", "process_out_blocks": "0", "process_user_time": 1.151555}
+[0m19:21:37.522977 [debug] [MainThread]: Command `dbt parse` succeeded at 19:21:37.522912 after 0.64 seconds
+[0m19:21:37.523216 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10f9e0d70>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10f9e0b90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e1d9710>]}
+[0m19:21:37.523406 [debug] [MainThread]: Flushing usage events
+[0m19:21:37.943386 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:21:55.748636 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c8b96a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e2b6710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e2b6990>]}
+
+
+============================== 19:21:55.751894 | 77c3c2a2-8bd1-41a1-9230-bd3928683e98 ==============================
+[0m19:21:55.751894 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m19:21:55.752255 [debug] [MainThread]: running dbt with arguments {'static_parser': 'True', 'use_experimental_parser': 'False', 'send_anonymous_usage_stats': 'True', 'hints_enabled': 'True', 'partial_parse': 'True', 'log_path': '/Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/logs', 'fail_fast': 'False', 'log_cache_events': 'False', 'introspect': 'True', 'quiet': 'False', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'use_colors': 'True', 'no_print': 'None', 'printer_width': '80', 'maximum_seed_size_mib': '1', 'target_path': 'None', 'empty': 'False', 'indirect_selection': 'eager', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'warn_error': 'None', 'write_json': 'True', 'invocation_command': 'dbt build', 'version_check': 'True', 'debug': 'False', 'log_format': 'default', 'cache_selected_only': 'False'}
+[0m19:21:55.752488 [debug] [MainThread]: Tracking: tracking
+[0m19:21:55.874950 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m19:21:55.875273 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m19:21:55.875440 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m19:21:56.001112 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ea2df30>]}
+[0m19:21:56.032749 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ed97f00>]}
+[0m19:21:56.033519 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m19:21:56.092197 [debug] [MainThread]: checksum: c7a5a50a5fd40c6064fab6579648b945bc1600075318ee408521527386663ab6, vars: {}, profile: warehouse, target: dev, version: 1.13.0rc1
+[0m19:21:56.185547 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m19:21:56.185795 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m19:21:56.185942 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m19:21:56.191172 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10fd73750>]}
+[0m19:21:56.281698 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m19:21:56.283429 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m19:21:56.294988 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m19:21:56.312417 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ffa0e60>]}
+[0m19:21:56.312678 [info ] [MainThread]: Found 6 models, 38 data tests, 1 source, 563 macros
+[0m19:21:56.314871 [info ] [MainThread]: 
+[0m19:21:56.315084 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m19:21:56.315238 [info ] [MainThread]: 
+[0m19:21:56.315509 [debug] [MainThread]: Acquiring new snowflake connection 'master'
+[0m19:21:56.317890 [debug] [ThreadPool]: Acquiring new snowflake connection 'list_GREENHOUSE_ANALYTICS'
+[0m19:21:56.327631 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS"
+[0m19:21:56.327888 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS: show terse schemas in database GREENHOUSE_ANALYTICS
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS"} */
+[0m19:21:56.328057 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m19:21:57.789834 [debug] [ThreadPool]: SQL status: SUCCESS 3 in 1.461 seconds
+[0m19:21:57.800778 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS"
+[0m19:21:57.801364 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS: show terse schemas in database GREENHOUSE_ANALYTICS
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS"} */
+[0m19:21:57.979764 [debug] [ThreadPool]: SQL status: SUCCESS 3 in 0.178 seconds
+[0m19:21:57.985929 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS"
+[0m19:21:57.986547 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS: show terse schemas in database GREENHOUSE_ANALYTICS
+    limit 10000
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS"} */
+[0m19:21:58.197866 [debug] [ThreadPool]: SQL status: SUCCESS 3 in 0.211 seconds
+[0m19:21:58.201951 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS, now create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts)
+[0m19:21:58.202746 [debug] [ThreadPool]: Creating schema "database: "GREENHOUSE_ANALYTICS"
+schema: "GREENHOUSE_DBT_marts"
+"
+[0m19:21:58.208023 [debug] [ThreadPool]: Using snowflake connection "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"
+[0m19:21:58.208436 [debug] [ThreadPool]: On create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts: create schema if not exists GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"} */
+[0m19:21:58.386330 [debug] [ThreadPool]: SQL status: SUCCESS 1 in 0.177 seconds
+[0m19:21:58.389672 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts, now create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate)
+[0m19:21:58.390641 [debug] [ThreadPool]: Creating schema "database: "GREENHOUSE_ANALYTICS"
+schema: "GREENHOUSE_DBT_intermediate"
+"
+[0m19:21:58.392867 [debug] [ThreadPool]: Using snowflake connection "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"
+[0m19:21:58.393395 [debug] [ThreadPool]: On create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate: create schema if not exists GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"} */
+[0m19:21:58.622858 [debug] [ThreadPool]: SQL status: SUCCESS 1 in 0.229 seconds
+[0m19:21:58.628525 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly create_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate, now list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts)
+[0m19:21:58.646511 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"
+[0m19:21:58.646948 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"} */;
+[0m19:21:58.813932 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.166 seconds
+[0m19:21:58.826388 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"
+[0m19:21:58.826926 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"} */
+[0m19:21:59.000860 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.173 seconds
+[0m19:21:59.004009 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts, now list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate)
+[0m19:21:59.006033 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"
+[0m19:21:59.006515 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"} */;
+[0m19:21:59.159185 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.152 seconds
+[0m19:21:59.165134 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"
+[0m19:21:59.165752 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"} */
+[0m19:21:59.473625 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.307 seconds
+[0m19:21:59.477391 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate, now list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging)
+[0m19:21:59.479478 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"
+[0m19:21:59.479942 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"} */;
+[0m19:21:59.658320 [debug] [ThreadPool]: SQL status: SUCCESS 1 in 0.178 seconds
+[0m19:21:59.664405 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"
+[0m19:21:59.665102 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"} */
+[0m19:21:59.835242 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.170 seconds
+[0m19:21:59.839609 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10ffe4050>]}
+[0m19:21:59.843298 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.int_sensor_event_audit
+[0m19:21:59.843925 [info ] [Thread-1 (]: 1 of 44 START sql view model GREENHOUSE_DBT_intermediate.int_sensor_event_audit  [RUN]
+[0m19:21:59.844464 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging, now model.greenhouse_analytics.int_sensor_event_audit)
+[0m19:21:59.844820 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.int_sensor_event_audit
+[0m19:21:59.851918 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.int_sensor_event_audit"
+[0m19:21:59.852827 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.int_sensor_event_audit
+[0m19:21:59.875051 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.int_sensor_event_audit"
+[0m19:21:59.875941 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.int_sensor_event_audit"
+[0m19:21:59.876427 [debug] [Thread-1 (]: On model.greenhouse_analytics.int_sensor_event_audit: create or replace   view GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_event_audit
+  
+  
+  
+  
+  as (
+    
+
+WITH source_events AS (
+    SELECT
+        EVENT:event_id::VARCHAR AS event_id,
+        EVENT:gateway_id::VARCHAR AS gateway_id,
+        EVENT:sensor_id::VARCHAR AS sensor_id,
+
+        TRY_TO_TIMESTAMP_TZ(
+            EVENT:timestamp::VARCHAR
+        ) AS measured_at,
+
+        EVENT:measurement_type::VARCHAR AS measurement_type,
+
+        TRY_TO_DOUBLE(
+            EVENT:value::VARCHAR
+        ) AS value,
+
+        EVENT:unit::VARCHAR AS unit,
+
+        EVENT:_kafka_topic::VARCHAR AS kafka_topic,
+        EVENT:_kafka_partition::INTEGER AS kafka_partition,
+        EVENT:_kafka_offset::BIGINT AS kafka_offset,
+
+        source_file,
+        source_file_row,
+        loaded_at
+
+    FROM GREENHOUSE_ANALYTICS.RAW.SENSOR_EVENTS
+),
+
+ranked AS (
+    SELECT
+        *,
+
+        ROW_NUMBER() OVER (
+            PARTITION BY event_id
+            ORDER BY
+                loaded_at DESC,
+                source_file DESC,
+                source_file_row DESC
+        ) AS event_rank
+
+    FROM source_events
+),
+
+audited AS (
+    SELECT
+        *,
+
+        IFF(
+            event_id IS NOT NULL
+            AND event_rank > 1,
+            TRUE,
+            FALSE
+        ) AS is_duplicate,
+
+        IFF(
+            event_id IS NOT NULL
+            AND gateway_id IS NOT NULL
+            AND sensor_id IS NOT NULL
+            AND measured_at IS NOT NULL
+            AND measurement_type IS NOT NULL
+            AND value IS NOT NULL
+            AND unit IS NOT NULL,
+            TRUE,
+            FALSE
+        ) AS is_valid
+
+    FROM ranked
+)
+
+SELECT
+    event_id,
+    gateway_id,
+    sensor_id,
+    measured_at,
+    measurement_type,
+    value,
+    unit,
+
+    kafka_topic,
+    kafka_partition,
+    kafka_offset,
+
+    source_file,
+    source_file_row,
+    loaded_at,
+
+    is_duplicate,
+    is_valid
+
+FROM audited
+  )
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.int_sensor_event_audit"} */;
+[0m19:22:00.463051 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.586 seconds
+[0m19:22:00.478701 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1101386d0>]}
+[0m19:22:00.479119 [info ] [Thread-1 (]: 1 of 44 OK created sql view model GREENHOUSE_DBT_intermediate.int_sensor_event_audit  [[32mSUCCESS 1[0m in 0.63s]
+[0m19:22:00.479454 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.int_sensor_event_audit
+[0m19:22:00.479675 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.stg_sensor_events
+[0m19:22:00.479995 [info ] [Thread-1 (]: 2 of 44 START sql view model GREENHOUSE_DBT_staging.stg_sensor_events .......... [RUN]
+[0m19:22:00.480339 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.greenhouse_analytics.int_sensor_event_audit, now model.greenhouse_analytics.stg_sensor_events)
+[0m19:22:00.480535 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.stg_sensor_events
+[0m19:22:00.481622 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.stg_sensor_events"
+[0m19:22:00.482016 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.stg_sensor_events
+[0m19:22:00.483149 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.stg_sensor_events"
+[0m19:22:00.483588 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.stg_sensor_events"
+[0m19:22:00.483809 [debug] [Thread-1 (]: On model.greenhouse_analytics.stg_sensor_events: create or replace   view GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+  
+  
+  
+  
+  as (
+    WITH source_events AS (
+    SELECT
+        EVENT:event_id::VARCHAR AS event_id,
+        EVENT:schema_version::INTEGER AS schema_version,
+        EVENT:gateway_id::VARCHAR AS gateway_id,
+        EVENT:sensor_id::VARCHAR AS sensor_id,
+        TRY_TO_TIMESTAMP_TZ(EVENT:timestamp::VARCHAR) AS measured_at,
+        EVENT:measurement_type::VARCHAR AS measurement_type,
+        TRY_TO_DOUBLE(EVENT:value::VARCHAR) AS value,
+        EVENT:unit::VARCHAR AS unit,
+
+        EVENT:_kafka_topic::VARCHAR AS kafka_topic,
+        EVENT:_kafka_partition::INTEGER AS kafka_partition,
+        EVENT:_kafka_offset::BIGINT AS kafka_offset,
+
+        SOURCE_FILE AS source_file,
+        SOURCE_FILE_ROW AS source_file_row,
+        LOADED_AT AS loaded_at
+
+    FROM GREENHOUSE_ANALYTICS.RAW.SENSOR_EVENTS
+),
+
+deduplicated AS (
+    SELECT *
+    FROM source_events
+    QUALIFY ROW_NUMBER() OVER (
+        PARTITION BY event_id
+        ORDER BY loaded_at DESC, source_file DESC, source_file_row DESC
+    ) = 1
+)
+
+SELECT *
+FROM deduplicated
+  )
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.stg_sensor_events"} */;
+[0m19:22:00.985820 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.501 seconds
+[0m19:22:00.998793 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110022150>]}
+[0m19:22:00.999907 [info ] [Thread-1 (]: 2 of 44 OK created sql view model GREENHOUSE_DBT_staging.stg_sensor_events ..... [[32mSUCCESS 1[0m in 0.52s]
+[0m19:22:01.000739 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.stg_sensor_events
+[0m19:22:01.001314 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4
+[0m19:22:01.002002 [info ] [Thread-1 (]: 3 of 44 START test not_null_int_sensor_event_audit_is_duplicate ................ [RUN]
+[0m19:22:01.002920 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.greenhouse_analytics.stg_sensor_events, now test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4)
+[0m19:22:01.003537 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4
+[0m19:22:01.023901 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4"
+[0m19:22:01.024765 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4
+[0m19:22:01.038937 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4"
+[0m19:22:01.039596 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4"
+[0m19:22:01.039852 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select is_duplicate
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_event_audit
+where is_duplicate is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4"} */
+[0m19:22:02.974476 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 1.934 seconds
+[0m19:22:02.986795 [info ] [Thread-1 (]: 3 of 44 PASS not_null_int_sensor_event_audit_is_duplicate ...................... [[32mPASS[0m in 1.98s]
+[0m19:22:02.988114 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4
+[0m19:22:02.988740 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a
+[0m19:22:02.989508 [info ] [Thread-1 (]: 4 of 44 START test not_null_int_sensor_event_audit_is_valid .................... [RUN]
+[0m19:22:02.990246 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_event_audit_is_duplicate.55a0e8e0c4, now test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a)
+[0m19:22:02.990774 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a
+[0m19:22:03.002406 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a"
+[0m19:22:03.003488 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a
+[0m19:22:03.005360 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a"
+[0m19:22:03.006453 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a"
+[0m19:22:03.006973 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select is_valid
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_event_audit
+where is_valid is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a"} */
+[0m19:22:03.609186 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.602 seconds
+[0m19:22:03.611321 [info ] [Thread-1 (]: 4 of 44 PASS not_null_int_sensor_event_audit_is_valid .......................... [[32mPASS[0m in 0.62s]
+[0m19:22:03.611723 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a
+[0m19:22:03.611995 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584
+[0m19:22:03.612286 [info ] [Thread-1 (]: 5 of 44 START test not_null_int_sensor_event_audit_loaded_at ................... [RUN]
+[0m19:22:03.612551 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_event_audit_is_valid.9e6cf9541a, now test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584)
+[0m19:22:03.612761 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584
+[0m19:22:03.617019 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584"
+[0m19:22:03.617476 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584
+[0m19:22:03.619010 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584"
+[0m19:22:03.619527 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584"
+[0m19:22:03.619759 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select loaded_at
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_event_audit
+where loaded_at is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584"} */
+[0m19:22:03.790432 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.170 seconds
+[0m19:22:03.795360 [info ] [Thread-1 (]: 5 of 44 PASS not_null_int_sensor_event_audit_loaded_at ......................... [[32mPASS[0m in 0.18s]
+[0m19:22:03.796488 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584
+[0m19:22:03.797149 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf
+[0m19:22:03.797780 [info ] [Thread-1 (]: 6 of 44 START test not_null_int_sensor_event_audit_source_file ................. [RUN]
+[0m19:22:03.798555 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_event_audit_loaded_at.7872cba584, now test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf)
+[0m19:22:03.799093 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf
+[0m19:22:03.811746 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf"
+[0m19:22:03.813498 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf
+[0m19:22:03.816107 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf"
+[0m19:22:03.817018 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf"
+[0m19:22:03.817383 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select source_file
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_event_audit
+where source_file is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf"} */
+[0m19:22:04.456940 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.639 seconds
+[0m19:22:04.462339 [info ] [Thread-1 (]: 6 of 44 PASS not_null_int_sensor_event_audit_source_file ....................... [[32mPASS[0m in 0.66s]
+[0m19:22:04.463198 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf
+[0m19:22:04.463709 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b
+[0m19:22:04.464195 [info ] [Thread-1 (]: 7 of 44 START test not_null_int_sensor_event_audit_source_file_row ............. [RUN]
+[0m19:22:04.464950 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file.6354274ebf, now test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b)
+[0m19:22:04.465378 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b
+[0m19:22:04.472165 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b"
+[0m19:22:04.472692 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b
+[0m19:22:04.473754 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b"
+[0m19:22:04.474185 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b"
+[0m19:22:04.474399 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select source_file_row
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_event_audit
+where source_file_row is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b"} */
+[0m19:22:04.984009 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.509 seconds
+[0m19:22:04.987348 [info ] [Thread-1 (]: 7 of 44 PASS not_null_int_sensor_event_audit_source_file_row ................... [[32mPASS[0m in 0.52s]
+[0m19:22:04.988513 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b
+[0m19:22:04.989027 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d
+[0m19:22:04.989616 [info ] [Thread-1 (]: 8 of 44 START test not_null_stg_sensor_events_event_id ......................... [RUN]
+[0m19:22:04.989975 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_event_audit_source_file_row.72773b9f0b, now test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d)
+[0m19:22:04.990181 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d
+[0m19:22:04.994380 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d"
+[0m19:22:04.994899 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d
+[0m19:22:04.995895 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d"
+[0m19:22:04.996439 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d"
+[0m19:22:04.996679 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select event_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where event_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d"} */
+[0m19:22:05.361254 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.364 seconds
+[0m19:22:05.363842 [info ] [Thread-1 (]: 8 of 44 PASS not_null_stg_sensor_events_event_id ............................... [[32mPASS[0m in 0.37s]
+[0m19:22:05.364446 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d
+[0m19:22:05.364840 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c
+[0m19:22:05.365315 [info ] [Thread-1 (]: 9 of 44 START test not_null_stg_sensor_events_gateway_id ....................... [RUN]
+[0m19:22:05.365705 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_stg_sensor_events_event_id.b4b4d3560d, now test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c)
+[0m19:22:05.366025 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c
+[0m19:22:05.372467 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c"
+[0m19:22:05.373411 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c
+[0m19:22:05.374918 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c"
+[0m19:22:05.375464 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c"
+[0m19:22:05.375733 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select gateway_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where gateway_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c"} */
+[0m19:22:05.754145 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.378 seconds
+[0m19:22:05.758364 [info ] [Thread-1 (]: 9 of 44 PASS not_null_stg_sensor_events_gateway_id ............................. [[32mPASS[0m in 0.39s]
+[0m19:22:05.759313 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c
+[0m19:22:05.759930 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae
+[0m19:22:05.760553 [info ] [Thread-1 (]: 10 of 44 START test not_null_stg_sensor_events_loaded_at ....................... [RUN]
+[0m19:22:05.761347 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_stg_sensor_events_gateway_id.04c42fff1c, now test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae)
+[0m19:22:05.761887 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae
+[0m19:22:05.769534 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae"
+[0m19:22:05.770231 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae
+[0m19:22:05.771471 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae"
+[0m19:22:05.771924 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae"
+[0m19:22:05.772122 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select loaded_at
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where loaded_at is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae"} */
+[0m19:22:05.971186 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.198 seconds
+[0m19:22:05.976043 [info ] [Thread-1 (]: 10 of 44 PASS not_null_stg_sensor_events_loaded_at ............................. [[32mPASS[0m in 0.21s]
+[0m19:22:05.977176 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae
+[0m19:22:05.977806 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf
+[0m19:22:05.978484 [info ] [Thread-1 (]: 11 of 44 START test not_null_stg_sensor_events_measurement_type ................ [RUN]
+[0m19:22:05.979391 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_stg_sensor_events_loaded_at.59cee655ae, now test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf)
+[0m19:22:05.980006 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf
+[0m19:22:05.989180 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf"
+[0m19:22:05.990005 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf
+[0m19:22:05.991809 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf"
+[0m19:22:05.992531 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf"
+[0m19:22:05.992880 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measurement_type
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where measurement_type is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf"} */
+[0m19:22:06.201450 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.208 seconds
+[0m19:22:06.206937 [info ] [Thread-1 (]: 11 of 44 PASS not_null_stg_sensor_events_measurement_type ...................... [[32mPASS[0m in 0.23s]
+[0m19:22:06.208081 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf
+[0m19:22:06.208713 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b
+[0m19:22:06.209357 [info ] [Thread-1 (]: 12 of 44 START test not_null_stg_sensor_events_schema_version .................. [RUN]
+[0m19:22:06.210036 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_stg_sensor_events_measurement_type.a414e9becf, now test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b)
+[0m19:22:06.210500 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b
+[0m19:22:06.222078 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b"
+[0m19:22:06.223093 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b
+[0m19:22:06.225551 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b"
+[0m19:22:06.226832 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b"
+[0m19:22:06.227217 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select schema_version
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where schema_version is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b"} */
+[0m19:22:06.503590 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.276 seconds
+[0m19:22:06.507343 [info ] [Thread-1 (]: 12 of 44 PASS not_null_stg_sensor_events_schema_version ........................ [[32mPASS[0m in 0.30s]
+[0m19:22:06.508190 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b
+[0m19:22:06.508713 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b
+[0m19:22:06.509192 [info ] [Thread-1 (]: 13 of 44 START test not_null_stg_sensor_events_sensor_id ....................... [RUN]
+[0m19:22:06.509714 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_stg_sensor_events_schema_version.236fe6b31b, now test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b)
+[0m19:22:06.510143 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b
+[0m19:22:06.519495 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b"
+[0m19:22:06.520765 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b
+[0m19:22:06.522819 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b"
+[0m19:22:06.523609 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b"
+[0m19:22:06.523950 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select sensor_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where sensor_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b"} */
+[0m19:22:07.076042 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.551 seconds
+[0m19:22:07.081771 [info ] [Thread-1 (]: 13 of 44 PASS not_null_stg_sensor_events_sensor_id ............................. [[32mPASS[0m in 0.57s]
+[0m19:22:07.082984 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b
+[0m19:22:07.083783 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd
+[0m19:22:07.084482 [info ] [Thread-1 (]: 14 of 44 START test not_null_stg_sensor_events_source_file ..................... [RUN]
+[0m19:22:07.085213 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_stg_sensor_events_sensor_id.e921f7fb0b, now test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd)
+[0m19:22:07.085724 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd
+[0m19:22:07.096379 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd"
+[0m19:22:07.097212 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd
+[0m19:22:07.099108 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd"
+[0m19:22:07.099880 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd"
+[0m19:22:07.100245 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select source_file
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where source_file is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd"} */
+[0m19:22:07.279161 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.179 seconds
+[0m19:22:07.281328 [info ] [Thread-1 (]: 14 of 44 PASS not_null_stg_sensor_events_source_file ........................... [[32mPASS[0m in 0.20s]
+[0m19:22:07.281792 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd
+[0m19:22:07.282093 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672
+[0m19:22:07.282409 [info ] [Thread-1 (]: 15 of 44 START test unique_stg_sensor_events_event_id .......................... [RUN]
+[0m19:22:07.282794 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_stg_sensor_events_source_file.8d9fa86fcd, now test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672)
+[0m19:22:07.283070 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672
+[0m19:22:07.290132 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672"
+[0m19:22:07.290742 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672
+[0m19:22:07.292090 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672"
+[0m19:22:07.292659 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672"
+[0m19:22:07.293352 [debug] [Thread-1 (]: On test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+select
+    event_id as unique_field,
+    count(*) as n_records
+
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+where event_id is not null
+group by event_id
+having count(*) > 1
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672"} */
+[0m19:22:07.640751 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.347 seconds
+[0m19:22:07.649485 [info ] [Thread-1 (]: 15 of 44 PASS unique_stg_sensor_events_event_id ................................ [[32mPASS[0m in 0.37s]
+[0m19:22:07.650635 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672
+[0m19:22:07.652590 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.int_sensor_readings
+[0m19:22:07.653678 [info ] [Thread-1 (]: 16 of 44 START sql view model GREENHOUSE_DBT_intermediate.int_sensor_readings .. [RUN]
+[0m19:22:07.654314 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.unique_stg_sensor_events_event_id.8eafa15672, now model.greenhouse_analytics.int_sensor_readings)
+[0m19:22:07.654980 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.int_sensor_readings
+[0m19:22:07.666224 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.int_sensor_readings"
+[0m19:22:07.671480 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.int_sensor_readings
+[0m19:22:07.676385 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.int_sensor_readings"
+[0m19:22:07.679085 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.int_sensor_readings"
+[0m19:22:07.679482 [debug] [Thread-1 (]: On model.greenhouse_analytics.int_sensor_readings: create or replace   view GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+  
+  
+  
+  
+  as (
+    
+
+WITH staged AS (
+    SELECT *
+    FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging.stg_sensor_events
+),
+
+validated AS (
+    SELECT
+        event_id,
+        schema_version,
+        gateway_id,
+        sensor_id,
+
+        measured_at,
+
+        CONVERT_TIMEZONE(
+            'UTC',
+            measured_at
+        )::TIMESTAMP_NTZ AS measured_at_utc,
+
+        measurement_type,
+        value,
+        unit,
+
+        kafka_topic,
+        kafka_partition,
+        kafka_offset,
+        source_file,
+        source_file_row,
+        loaded_at
+
+    FROM staged
+
+    WHERE event_id IS NOT NULL
+      AND gateway_id IS NOT NULL
+      AND sensor_id IS NOT NULL
+      AND measured_at IS NOT NULL
+      AND measurement_type IS NOT NULL
+      AND value IS NOT NULL
+      AND unit IS NOT NULL
+),
+
+final AS (
+    SELECT
+        *,
+
+        DATE_TRUNC(
+            'HOUR',
+            measured_at_utc
+        ) AS measurement_hour_utc,
+
+        TO_DATE(
+            measured_at_utc
+        ) AS measurement_date_utc
+
+    FROM validated
+)
+
+SELECT *
+FROM final
+  )
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.int_sensor_readings"} */;
+[0m19:22:08.234741 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.554 seconds
+[0m19:22:08.239004 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110196c50>]}
+[0m19:22:08.239734 [info ] [Thread-1 (]: 16 of 44 OK created sql view model GREENHOUSE_DBT_intermediate.int_sensor_readings  [[32mSUCCESS 1[0m in 0.58s]
+[0m19:22:08.240256 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.int_sensor_readings
+[0m19:22:08.240991 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3
+[0m19:22:08.241320 [info ] [Thread-1 (]: 17 of 44 START test not_null_int_sensor_readings_event_id ...................... [RUN]
+[0m19:22:08.241719 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.greenhouse_analytics.int_sensor_readings, now test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3)
+[0m19:22:08.241978 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3
+[0m19:22:08.248364 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3"
+[0m19:22:08.249076 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3
+[0m19:22:08.250369 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3"
+[0m19:22:08.250842 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3"
+[0m19:22:08.251065 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select event_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where event_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3"} */
+[0m19:22:08.519076 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.268 seconds
+[0m19:22:08.522896 [info ] [Thread-1 (]: 17 of 44 PASS not_null_int_sensor_readings_event_id ............................ [[32mPASS[0m in 0.28s]
+[0m19:22:08.523843 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3
+[0m19:22:08.524338 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a
+[0m19:22:08.524841 [info ] [Thread-1 (]: 18 of 44 START test not_null_int_sensor_readings_gateway_id .................... [RUN]
+[0m19:22:08.525385 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_event_id.ca6ba195d3, now test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a)
+[0m19:22:08.525806 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a
+[0m19:22:08.536507 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a"
+[0m19:22:08.537652 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a
+[0m19:22:08.540139 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a"
+[0m19:22:08.541095 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a"
+[0m19:22:08.541539 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select gateway_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where gateway_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a"} */
+[0m19:22:08.756973 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.215 seconds
+[0m19:22:08.761301 [info ] [Thread-1 (]: 18 of 44 PASS not_null_int_sensor_readings_gateway_id .......................... [[32mPASS[0m in 0.24s]
+[0m19:22:08.762233 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a
+[0m19:22:08.762913 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94
+[0m19:22:08.763545 [info ] [Thread-1 (]: 19 of 44 START test not_null_int_sensor_readings_measured_at_utc ............... [RUN]
+[0m19:22:08.764280 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_gateway_id.d52b48857a, now test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94)
+[0m19:22:08.764838 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94
+[0m19:22:08.775203 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94"
+[0m19:22:08.776336 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94
+[0m19:22:08.778826 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94"
+[0m19:22:08.779786 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94"
+[0m19:22:08.780027 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measured_at_utc
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where measured_at_utc is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94"} */
+[0m19:22:09.304567 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.524 seconds
+[0m19:22:09.311084 [info ] [Thread-1 (]: 19 of 44 PASS not_null_int_sensor_readings_measured_at_utc ..................... [[32mPASS[0m in 0.55s]
+[0m19:22:09.312215 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94
+[0m19:22:09.313084 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84
+[0m19:22:09.313829 [info ] [Thread-1 (]: 20 of 44 START test not_null_int_sensor_readings_measurement_date_utc .......... [RUN]
+[0m19:22:09.314512 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_measured_at_utc.6684f6bf94, now test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84)
+[0m19:22:09.315017 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84
+[0m19:22:09.325923 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84"
+[0m19:22:09.327451 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84
+[0m19:22:09.329735 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84"
+[0m19:22:09.330546 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84"
+[0m19:22:09.330914 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measurement_date_utc
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where measurement_date_utc is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84"} */
+[0m19:22:09.696163 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.365 seconds
+[0m19:22:09.699896 [info ] [Thread-1 (]: 20 of 44 PASS not_null_int_sensor_readings_measurement_date_utc ................ [[32mPASS[0m in 0.39s]
+[0m19:22:09.700850 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84
+[0m19:22:09.701430 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80
+[0m19:22:09.701994 [info ] [Thread-1 (]: 21 of 44 START test not_null_int_sensor_readings_measurement_hour_utc .......... [RUN]
+[0m19:22:09.702602 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_measurement_date_utc.7ac06c2c84, now test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80)
+[0m19:22:09.703050 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80
+[0m19:22:09.711219 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80"
+[0m19:22:09.712682 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80
+[0m19:22:09.714937 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80"
+[0m19:22:09.715664 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80"
+[0m19:22:09.715998 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measurement_hour_utc
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where measurement_hour_utc is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80"} */
+[0m19:22:10.067693 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.351 seconds
+[0m19:22:10.073439 [info ] [Thread-1 (]: 21 of 44 PASS not_null_int_sensor_readings_measurement_hour_utc ................ [[32mPASS[0m in 0.37s]
+[0m19:22:10.074571 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80
+[0m19:22:10.075307 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1
+[0m19:22:10.076045 [info ] [Thread-1 (]: 22 of 44 START test not_null_int_sensor_readings_measurement_type .............. [RUN]
+[0m19:22:10.076817 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_measurement_hour_utc.2ebf3c5c80, now test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1)
+[0m19:22:10.077355 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1
+[0m19:22:10.088717 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1"
+[0m19:22:10.089727 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1
+[0m19:22:10.091971 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1"
+[0m19:22:10.092870 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1"
+[0m19:22:10.093251 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measurement_type
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where measurement_type is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1"} */
+[0m19:22:10.331302 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.237 seconds
+[0m19:22:10.337091 [info ] [Thread-1 (]: 22 of 44 PASS not_null_int_sensor_readings_measurement_type .................... [[32mPASS[0m in 0.26s]
+[0m19:22:10.338229 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1
+[0m19:22:10.338840 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233
+[0m19:22:10.339478 [info ] [Thread-1 (]: 23 of 44 START test not_null_int_sensor_readings_sensor_id ..................... [RUN]
+[0m19:22:10.340259 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_measurement_type.95bb54b7f1, now test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233)
+[0m19:22:10.340785 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233
+[0m19:22:10.351533 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233"
+[0m19:22:10.352578 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233
+[0m19:22:10.354776 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233"
+[0m19:22:10.355642 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233"
+[0m19:22:10.356077 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select sensor_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where sensor_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233"} */
+[0m19:22:10.540633 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.184 seconds
+[0m19:22:10.543650 [info ] [Thread-1 (]: 23 of 44 PASS not_null_int_sensor_readings_sensor_id ........................... [[32mPASS[0m in 0.20s]
+[0m19:22:10.544522 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233
+[0m19:22:10.544895 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0
+[0m19:22:10.545362 [info ] [Thread-1 (]: 24 of 44 START test not_null_int_sensor_readings_unit .......................... [RUN]
+[0m19:22:10.545841 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_sensor_id.20074f4233, now test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0)
+[0m19:22:10.546133 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0
+[0m19:22:10.553618 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0"
+[0m19:22:10.554250 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0
+[0m19:22:10.555864 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0"
+[0m19:22:10.556659 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0"
+[0m19:22:10.556981 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select unit
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where unit is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0"} */
+[0m19:22:11.268759 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.711 seconds
+[0m19:22:11.271769 [info ] [Thread-1 (]: 24 of 44 PASS not_null_int_sensor_readings_unit ................................ [[32mPASS[0m in 0.73s]
+[0m19:22:11.272404 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0
+[0m19:22:11.272755 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a
+[0m19:22:11.273114 [info ] [Thread-1 (]: 25 of 44 START test not_null_int_sensor_readings_value ......................... [RUN]
+[0m19:22:11.273542 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_unit.2719dac7c0, now test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a)
+[0m19:22:11.273883 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a
+[0m19:22:11.280454 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a"
+[0m19:22:11.281441 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a
+[0m19:22:11.282782 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a"
+[0m19:22:11.283414 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a"
+[0m19:22:11.283690 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select value
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where value is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a"} */
+[0m19:22:11.655654 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.372 seconds
+[0m19:22:11.659574 [info ] [Thread-1 (]: 25 of 44 PASS not_null_int_sensor_readings_value ............................... [[32mPASS[0m in 0.39s]
+[0m19:22:11.660682 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a
+[0m19:22:11.661198 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb
+[0m19:22:11.661723 [info ] [Thread-1 (]: 26 of 44 START test unique_int_sensor_readings_event_id ........................ [RUN]
+[0m19:22:11.662367 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_int_sensor_readings_value.9357c9c75a, now test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb)
+[0m19:22:11.662986 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb
+[0m19:22:11.678808 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb"
+[0m19:22:11.680052 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb
+[0m19:22:11.682424 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb"
+[0m19:22:11.683346 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb"
+[0m19:22:11.683721 [debug] [Thread-1 (]: On test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+select
+    event_id as unique_field,
+    count(*) as n_records
+
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+where event_id is not null
+group by event_id
+having count(*) > 1
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb"} */
+[0m19:22:12.089307 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.405 seconds
+[0m19:22:12.094749 [info ] [Thread-1 (]: 26 of 44 PASS unique_int_sensor_readings_event_id .............................. [[32mPASS[0m in 0.43s]
+[0m19:22:12.095643 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb
+[0m19:22:12.096842 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.fct_sensor_daily
+[0m19:22:12.097603 [info ] [Thread-1 (]: 27 of 44 START sql table model GREENHOUSE_DBT_marts.fct_sensor_daily ........... [RUN]
+[0m19:22:12.098187 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.unique_int_sensor_readings_event_id.d46508d4fb, now model.greenhouse_analytics.fct_sensor_daily)
+[0m19:22:12.098655 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.fct_sensor_daily
+[0m19:22:12.101533 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.fct_sensor_daily"
+[0m19:22:12.103394 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.fct_sensor_daily
+[0m19:22:12.129232 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.fct_sensor_daily"
+[0m19:22:12.129986 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.fct_sensor_daily"
+[0m19:22:12.130267 [debug] [Thread-1 (]: On model.greenhouse_analytics.fct_sensor_daily: create or replace transient table GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_daily
+    
+    
+    
+    
+    
+
+    as (
+
+WITH readings AS (
+    SELECT *
+    FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+),
+
+daily AS (
+    SELECT
+        measurement_date_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+        unit,
+
+        COUNT(*) AS reading_count,
+
+        AVG(value) AS avg_value,
+        MIN(value) AS min_value,
+        MAX(value) AS max_value,
+        STDDEV_SAMP(value) AS stddev_value,
+
+        MIN(measured_at_utc) AS first_measured_at_utc,
+        MAX(measured_at_utc) AS last_measured_at_utc
+
+    FROM readings
+
+    GROUP BY
+        measurement_date_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+        unit
+)
+
+SELECT *
+FROM daily
+    )
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.fct_sensor_daily"} */;
+[0m19:22:13.410263 [debug] [Thread-1 (]: SQL status: SUCCESS 58 in 1.279 seconds
+[0m19:22:13.416160 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110191e50>]}
+[0m19:22:13.417385 [info ] [Thread-1 (]: 27 of 44 OK created sql table model GREENHOUSE_DBT_marts.fct_sensor_daily ...... [[32mSUCCESS 58[0m in 1.32s]
+[0m19:22:13.418310 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.fct_sensor_daily
+[0m19:22:13.418887 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:13.420286 [info ] [Thread-1 (]: 28 of 44 START sql table model GREENHOUSE_DBT_marts.fct_sensor_hourly .......... [RUN]
+[0m19:22:13.421227 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.greenhouse_analytics.fct_sensor_daily, now model.greenhouse_analytics.fct_sensor_hourly)
+[0m19:22:13.421791 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:13.425846 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.fct_sensor_hourly"
+[0m19:22:13.426902 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:13.430210 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.fct_sensor_hourly"
+[0m19:22:13.431721 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.fct_sensor_hourly"
+[0m19:22:13.432249 [debug] [Thread-1 (]: On model.greenhouse_analytics.fct_sensor_hourly: create or replace transient table GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+    
+    
+    
+    
+    
+
+    as (
+
+WITH readings AS (
+    SELECT *
+    FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+),
+
+hourly AS (
+    SELECT
+        measurement_hour_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+        unit,
+
+        COUNT(*) AS reading_count,
+
+        AVG(value) AS avg_value,
+        MIN(value) AS min_value,
+        MAX(value) AS max_value,
+        STDDEV_SAMP(value) AS stddev_value,
+
+        MIN(measured_at_utc) AS first_measured_at_utc,
+        MAX(measured_at_utc) AS last_measured_at_utc
+
+    FROM readings
+
+    GROUP BY
+        measurement_hour_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+        unit
+)
+
+SELECT *
+FROM hourly
+    )
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.fct_sensor_hourly"} */;
+[0m19:22:14.645873 [debug] [Thread-1 (]: SQL status: SUCCESS 1253 in 1.213 seconds
+[0m19:22:14.648711 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10f9b7bd0>]}
+[0m19:22:14.649176 [info ] [Thread-1 (]: 28 of 44 OK created sql table model GREENHOUSE_DBT_marts.fct_sensor_hourly ..... [[32mSUCCESS 1253[0m in 1.23s]
+[0m19:22:14.649512 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:14.649805 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.fct_sensor_quality_daily
+[0m19:22:14.650162 [info ] [Thread-1 (]: 29 of 44 START sql table model GREENHOUSE_DBT_marts.fct_sensor_quality_daily ... [RUN]
+[0m19:22:14.650614 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.greenhouse_analytics.fct_sensor_hourly, now model.greenhouse_analytics.fct_sensor_quality_daily)
+[0m19:22:14.650816 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.fct_sensor_quality_daily
+[0m19:22:14.652648 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.fct_sensor_quality_daily"
+[0m19:22:14.653132 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.fct_sensor_quality_daily
+[0m19:22:14.654204 [debug] [Thread-1 (]: Writing runtime sql for node "model.greenhouse_analytics.fct_sensor_quality_daily"
+[0m19:22:14.654798 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.fct_sensor_quality_daily"
+[0m19:22:14.655059 [debug] [Thread-1 (]: On model.greenhouse_analytics.fct_sensor_quality_daily: create or replace transient table GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_quality_daily
+    
+    
+    
+    
+    
+
+    as (
+
+WITH audit_events AS (
+    SELECT
+        *,
+
+        COALESCE(
+            TO_DATE(
+                CONVERT_TIMEZONE('UTC', measured_at)
+            ),
+            TO_DATE(
+                CONVERT_TIMEZONE('UTC', loaded_at)
+            )
+        ) AS reporting_date_utc
+
+    FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_event_audit
+),
+
+quality_counts AS (
+    SELECT
+        reporting_date_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+
+        COUNT(*) AS raw_record_count,
+
+        SUM(
+            IFF(is_duplicate, 1, 0)
+        ) AS duplicate_record_count,
+
+        SUM(
+            IFF(NOT is_valid, 1, 0)
+        ) AS invalid_record_count,
+
+        SUM(
+            IFF(
+                is_valid AND NOT is_duplicate,
+                1,
+                0
+            )
+        ) AS valid_unique_reading_count
+
+    FROM audit_events
+
+    GROUP BY
+        reporting_date_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type
+),
+
+readings_with_previous AS (
+    SELECT
+        measurement_date_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+        measured_at_utc,
+
+        LAG(measured_at_utc) OVER (
+            PARTITION BY
+                gateway_id,
+                sensor_id,
+                measurement_type
+
+            ORDER BY
+                measured_at_utc,
+                event_id
+        ) AS previous_measured_at_utc
+
+    FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+),
+
+daily_gaps AS (
+    SELECT
+        measurement_date_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+
+        MAX(
+            DATEDIFF(
+                'SECOND',
+                previous_measured_at_utc,
+                measured_at_utc
+            )
+        ) AS max_reading_gap_seconds
+
+    FROM readings_with_previous
+
+    GROUP BY
+        measurement_date_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type
+)
+
+SELECT
+    q.reporting_date_utc AS measurement_date_utc,
+
+    q.gateway_id,
+    q.sensor_id,
+    q.measurement_type,
+
+    q.raw_record_count,
+    q.duplicate_record_count,
+    q.invalid_record_count,
+    q.valid_unique_reading_count,
+
+    g.max_reading_gap_seconds
+
+FROM quality_counts q
+
+LEFT JOIN daily_gaps g
+    ON q.reporting_date_utc = g.measurement_date_utc
+   AND q.gateway_id = g.gateway_id
+   AND q.sensor_id = g.sensor_id
+   AND q.measurement_type = g.measurement_type
+    )
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.fct_sensor_quality_daily"} */;
+[0m19:22:17.104957 [debug] [Thread-1 (]: SQL status: SUCCESS 58 in 2.449 seconds
+[0m19:22:17.108434 [debug] [Thread-1 (]: Sending event: {'category': 'dbt', 'action': 'run_model', 'label': '77c3c2a2-8bd1-41a1-9230-bd3928683e98', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10f9dcc20>]}
+[0m19:22:17.109292 [info ] [Thread-1 (]: 29 of 44 OK created sql table model GREENHOUSE_DBT_marts.fct_sensor_quality_daily  [[32mSUCCESS 58[0m in 2.46s]
+[0m19:22:17.110047 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.fct_sensor_quality_daily
+[0m19:22:17.110637 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:17.111168 [info ] [Thread-1 (]: 30 of 44 START test assert_unique_hourly_grain ................................. [RUN]
+[0m19:22:17.111835 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.greenhouse_analytics.fct_sensor_quality_daily, now test.greenhouse_analytics.assert_unique_hourly_grain)
+[0m19:22:17.112250 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:17.114566 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.assert_unique_hourly_grain"
+[0m19:22:17.116079 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:17.118313 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.assert_unique_hourly_grain"
+[0m19:22:17.119123 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.assert_unique_hourly_grain"
+[0m19:22:17.119387 [debug] [Thread-1 (]: On test.greenhouse_analytics.assert_unique_hourly_grain: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  SELECT
+    measurement_hour_utc,
+    gateway_id,
+    sensor_id,
+    measurement_type,
+    unit,
+    COUNT(*) AS row_count
+
+FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+
+GROUP BY 1, 2, 3, 4, 5
+HAVING COUNT(*) > 1
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.assert_unique_hourly_grain"} */
+[0m19:22:17.638243 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.518 seconds
+[0m19:22:17.645709 [info ] [Thread-1 (]: 30 of 44 PASS assert_unique_hourly_grain ....................................... [[32mPASS[0m in 0.53s]
+[0m19:22:17.647133 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:17.648209 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:17.648984 [info ] [Thread-1 (]: 31 of 44 START test not_null_fct_sensor_hourly_avg_value ....................... [RUN]
+[0m19:22:17.649691 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.assert_unique_hourly_grain, now test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e)
+[0m19:22:17.650218 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:17.660226 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e"
+[0m19:22:17.662301 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:17.664375 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e"
+[0m19:22:17.665283 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e"
+[0m19:22:17.665651 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select avg_value
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where avg_value is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e"} */
+[0m19:22:17.969483 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.303 seconds
+[0m19:22:17.971595 [info ] [Thread-1 (]: 31 of 44 PASS not_null_fct_sensor_hourly_avg_value ............................. [[32mPASS[0m in 0.32s]
+[0m19:22:17.972008 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:17.972265 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:17.972550 [info ] [Thread-1 (]: 32 of 44 START test not_null_fct_sensor_hourly_gateway_id ...................... [RUN]
+[0m19:22:17.972929 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e, now test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3)
+[0m19:22:17.973186 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:17.978184 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3"
+[0m19:22:17.978744 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:17.980171 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3"
+[0m19:22:17.980728 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3"
+[0m19:22:17.980971 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select gateway_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where gateway_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3"} */
+[0m19:22:18.288583 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.307 seconds
+[0m19:22:18.294140 [info ] [Thread-1 (]: 32 of 44 PASS not_null_fct_sensor_hourly_gateway_id ............................ [[32mPASS[0m in 0.32s]
+[0m19:22:18.295292 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:18.295913 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:18.296536 [info ] [Thread-1 (]: 33 of 44 START test not_null_fct_sensor_hourly_max_value ....................... [RUN]
+[0m19:22:18.297222 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3, now test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e)
+[0m19:22:18.297739 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:18.311005 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e"
+[0m19:22:18.312076 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:18.314844 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e"
+[0m19:22:18.315942 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e"
+[0m19:22:18.316356 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select max_value
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where max_value is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e"} */
+[0m19:22:18.564065 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.247 seconds
+[0m19:22:18.567079 [info ] [Thread-1 (]: 33 of 44 PASS not_null_fct_sensor_hourly_max_value ............................. [[32mPASS[0m in 0.27s]
+[0m19:22:18.567708 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:18.568103 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:18.568520 [info ] [Thread-1 (]: 34 of 44 START test not_null_fct_sensor_hourly_measurement_hour_utc ............ [RUN]
+[0m19:22:18.569039 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e, now test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da)
+[0m19:22:18.569404 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:18.576993 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da"
+[0m19:22:18.577867 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:18.579293 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da"
+[0m19:22:18.579875 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da"
+[0m19:22:18.580150 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measurement_hour_utc
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where measurement_hour_utc is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da"} */
+[0m19:22:18.743707 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.163 seconds
+[0m19:22:18.747300 [info ] [Thread-1 (]: 34 of 44 PASS not_null_fct_sensor_hourly_measurement_hour_utc .................. [[32mPASS[0m in 0.18s]
+[0m19:22:18.748058 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:18.748411 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:18.748733 [info ] [Thread-1 (]: 35 of 44 START test not_null_fct_sensor_hourly_measurement_type ................ [RUN]
+[0m19:22:18.749076 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da, now test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96)
+[0m19:22:18.749340 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:18.754375 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96"
+[0m19:22:18.754979 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:18.756344 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96"
+[0m19:22:18.756915 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96"
+[0m19:22:18.757164 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measurement_type
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where measurement_type is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96"} */
+[0m19:22:18.915087 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.158 seconds
+[0m19:22:18.918961 [info ] [Thread-1 (]: 35 of 44 PASS not_null_fct_sensor_hourly_measurement_type ...................... [[32mPASS[0m in 0.17s]
+[0m19:22:18.919883 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:18.920467 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:18.921056 [info ] [Thread-1 (]: 36 of 44 START test not_null_fct_sensor_hourly_min_value ....................... [RUN]
+[0m19:22:18.921798 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96, now test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794)
+[0m19:22:18.922294 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:18.928676 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794"
+[0m19:22:18.929174 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:18.930159 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794"
+[0m19:22:18.930566 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794"
+[0m19:22:18.930752 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select min_value
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where min_value is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794"} */
+[0m19:22:19.080207 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.149 seconds
+[0m19:22:19.084385 [info ] [Thread-1 (]: 36 of 44 PASS not_null_fct_sensor_hourly_min_value ............................. [[32mPASS[0m in 0.16s]
+[0m19:22:19.085299 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:19.085891 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:19.086468 [info ] [Thread-1 (]: 37 of 44 START test not_null_fct_sensor_hourly_reading_count ................... [RUN]
+[0m19:22:19.087132 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794, now test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87)
+[0m19:22:19.087654 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:19.094490 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87"
+[0m19:22:19.095007 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:19.096035 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87"
+[0m19:22:19.096448 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87"
+[0m19:22:19.096630 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select reading_count
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where reading_count is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87"} */
+[0m19:22:19.235834 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.139 seconds
+[0m19:22:19.240907 [info ] [Thread-1 (]: 37 of 44 PASS not_null_fct_sensor_hourly_reading_count ......................... [[32mPASS[0m in 0.15s]
+[0m19:22:19.241895 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:19.242528 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:19.243280 [info ] [Thread-1 (]: 38 of 44 START test not_null_fct_sensor_hourly_sensor_id ....................... [RUN]
+[0m19:22:19.243932 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87, now test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755)
+[0m19:22:19.244415 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:19.250730 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755"
+[0m19:22:19.251250 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:19.252210 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755"
+[0m19:22:19.252612 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755"
+[0m19:22:19.252797 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select sensor_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where sensor_id is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755"} */
+[0m19:22:19.408291 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.155 seconds
+[0m19:22:19.412351 [info ] [Thread-1 (]: 38 of 44 PASS not_null_fct_sensor_hourly_sensor_id ............................. [[32mPASS[0m in 0.17s]
+[0m19:22:19.413456 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:19.414109 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:19.414784 [info ] [Thread-1 (]: 39 of 44 START test not_null_fct_sensor_hourly_unit ............................ [RUN]
+[0m19:22:19.415402 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755, now test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4)
+[0m19:22:19.415877 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:19.426245 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4"
+[0m19:22:19.427543 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:19.429885 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4"
+[0m19:22:19.442357 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4"
+[0m19:22:19.449926 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select unit
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where unit is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4"} */
+[0m19:22:19.630271 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.168 seconds
+[0m19:22:19.631645 [info ] [Thread-1 (]: 39 of 44 PASS not_null_fct_sensor_hourly_unit .................................. [[32mPASS[0m in 0.22s]
+[0m19:22:19.631963 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:19.632164 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649
+[0m19:22:19.632390 [info ] [Thread-1 (]: 40 of 44 START test not_null_fct_sensor_quality_daily_duplicate_record_count ... [RUN]
+[0m19:22:19.632661 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4, now test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649)
+[0m19:22:19.632892 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649
+[0m19:22:19.636648 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649"
+[0m19:22:19.637076 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649
+[0m19:22:19.638699 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649"
+[0m19:22:19.639266 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649"
+[0m19:22:19.639506 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select duplicate_record_count
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_quality_daily
+where duplicate_record_count is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649"} */
+[0m19:22:20.114158 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.474 seconds
+[0m19:22:20.119392 [info ] [Thread-1 (]: 40 of 44 PASS not_null_fct_sensor_quality_daily_duplicate_record_count ......... [[32mPASS[0m in 0.49s]
+[0m19:22:20.120561 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649
+[0m19:22:20.121309 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb
+[0m19:22:20.121997 [info ] [Thread-1 (]: 41 of 44 START test not_null_fct_sensor_quality_daily_invalid_record_count ..... [RUN]
+[0m19:22:20.122795 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_quality_daily_duplicate_record_count.628f5fa649, now test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb)
+[0m19:22:20.123332 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb
+[0m19:22:20.132819 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb"
+[0m19:22:20.133870 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb
+[0m19:22:20.135650 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb"
+[0m19:22:20.136388 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb"
+[0m19:22:20.136742 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select invalid_record_count
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_quality_daily
+where invalid_record_count is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb"} */
+[0m19:22:20.393825 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.257 seconds
+[0m19:22:20.395709 [info ] [Thread-1 (]: 41 of 44 PASS not_null_fct_sensor_quality_daily_invalid_record_count ........... [[32mPASS[0m in 0.27s]
+[0m19:22:20.396109 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb
+[0m19:22:20.396372 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800
+[0m19:22:20.396646 [info ] [Thread-1 (]: 42 of 44 START test not_null_fct_sensor_quality_daily_measurement_date_utc ..... [RUN]
+[0m19:22:20.396959 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_quality_daily_invalid_record_count.787c34facb, now test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800)
+[0m19:22:20.397198 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800
+[0m19:22:20.402424 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800"
+[0m19:22:20.403298 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800
+[0m19:22:20.404528 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800"
+[0m19:22:20.405112 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800"
+[0m19:22:20.405380 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select measurement_date_utc
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_quality_daily
+where measurement_date_utc is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800"} */
+[0m19:22:20.684518 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.279 seconds
+[0m19:22:20.690625 [info ] [Thread-1 (]: 42 of 44 PASS not_null_fct_sensor_quality_daily_measurement_date_utc ........... [[32mPASS[0m in 0.29s]
+[0m19:22:20.691759 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800
+[0m19:22:20.692612 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2
+[0m19:22:20.693564 [info ] [Thread-1 (]: 43 of 44 START test not_null_fct_sensor_quality_daily_raw_record_count ......... [RUN]
+[0m19:22:20.694900 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_quality_daily_measurement_date_utc.012505b800, now test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2)
+[0m19:22:20.695706 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2
+[0m19:22:20.705595 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2"
+[0m19:22:20.706561 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2
+[0m19:22:20.708519 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2"
+[0m19:22:20.711269 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2"
+[0m19:22:20.711697 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select raw_record_count
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_quality_daily
+where raw_record_count is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2"} */
+[0m19:22:20.854273 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.142 seconds
+[0m19:22:20.858140 [info ] [Thread-1 (]: 43 of 44 PASS not_null_fct_sensor_quality_daily_raw_record_count ............... [[32mPASS[0m in 0.16s]
+[0m19:22:20.859192 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2
+[0m19:22:20.859877 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950
+[0m19:22:20.860519 [info ] [Thread-1 (]: 44 of 44 START test not_null_fct_sensor_quality_daily_valid_unique_reading_count  [RUN]
+[0m19:22:20.861228 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_quality_daily_raw_record_count.9a059e20d2, now test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950)
+[0m19:22:20.861748 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950
+[0m19:22:20.872344 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950"
+[0m19:22:20.873383 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950
+[0m19:22:20.875350 [debug] [Thread-1 (]: Writing runtime sql for node "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950"
+[0m19:22:20.876563 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950"
+[0m19:22:20.876988 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950: select
+      count(*) as failures,
+      count(*) != 0 as should_warn,
+      count(*) != 0 as should_error
+    from (
+      
+    
+  
+    
+    
+
+
+
+select valid_unique_reading_count
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_quality_daily
+where valid_unique_reading_count is null
+
+
+
+  
+  
+      
+    ) dbt_internal_test
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950"} */
+[0m19:22:21.145017 [debug] [Thread-1 (]: SQL status: SUCCESS 1 in 0.267 seconds
+[0m19:22:21.150573 [info ] [Thread-1 (]: 44 of 44 PASS not_null_fct_sensor_quality_daily_valid_unique_reading_count ..... [[32mPASS[0m in 0.29s]
+[0m19:22:21.151739 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950
+[0m19:22:21.154139 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m19:22:21.154564 [debug] [MainThread]: Connection 'test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950' was left open.
+[0m19:22:21.154976 [debug] [MainThread]: On test.greenhouse_analytics.not_null_fct_sensor_quality_daily_valid_unique_reading_count.aaf5e0a950: Close
+[0m19:22:21.383198 [info ] [MainThread]: 
+[0m19:22:21.384285 [info ] [MainThread]: Finished running 3 table models, 38 data tests, 3 view models in 0 hours 0 minutes and 25.07 seconds (25.07s).
+[0m19:22:21.392222 [debug] [MainThread]: Command end result
+[0m19:22:21.434381 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m19:22:21.437216 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m19:22:21.438639 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m19:22:21.445036 [debug] [MainThread]: Wrote artifact RunExecutionResult to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/run_results.json
+[0m19:22:21.445243 [info ] [MainThread]: 
+[0m19:22:21.445478 [info ] [MainThread]: [32mCompleted successfully[0m
+[0m19:22:21.445666 [info ] [MainThread]: 
+[0m19:22:21.445879 [info ] [MainThread]: Done. PASS=44 WARN=0 ERROR=0 SKIP=0 NO-OP=0 REUSED=0 TOTAL=44
+[0m19:22:21.448891 [debug] [MainThread]: Resource report: {"command_name": "build", "command_success": true, "command_wall_clock_time": 25.757128, "process_in_blocks": "0", "process_kernel_time": 0.364791, "process_mem_max_rss": "184156160", "process_out_blocks": "0", "process_user_time": 2.408829}
+[0m19:22:21.449373 [debug] [MainThread]: Command `dbt build` succeeded at 19:22:21.449318 after 25.76 seconds
+[0m19:22:21.449649 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e2679b0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110115010>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x110117410>]}
+[0m19:22:21.449860 [debug] [MainThread]: Flushing usage events
+[0m19:22:22.075066 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:22:32.966418 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10adb96a0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c7ba710>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10c7ba990>]}
+
+
+============================== 19:22:32.969304 | 48a929bf-8768-496e-bad9-ced86fa479e3 ==============================
+[0m19:22:32.969304 [info ] [MainThread]: Running with dbt=1.13.0-rc1
+[0m19:22:32.969628 [debug] [MainThread]: running dbt with arguments {'quiet': 'False', 'profiles_dir': '/Users/gregoryjoshua/.dbt', 'hints_enabled': 'True', 'target_path': 'None', 'cache_selected_only': 'False', 'fail_fast': 'False', 'debug': 'False', 'static_parser': 'True', 'log_cache_events': 'False', 'invocation_command': 'dbt show --select fct_sensor_hourly --limit 10', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'use_colors': 'True', 'log_format': 'default', 'log_path': '/Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/logs', 'introspect': 'True', 'use_experimental_parser': 'False', 'indirect_selection': 'eager', 'maximum_seed_size_mib': '1', 'partial_parse': 'True', 'empty': 'None', 'no_print': 'None', 'write_json': 'True', 'warn_error': 'None', 'version_check': 'True', 'send_anonymous_usage_stats': 'True', 'printer_width': '80'}
+[0m19:22:32.969843 [debug] [MainThread]: Tracking: tracking
+[0m19:22:33.085463 [debug] [MainThread]: Snowflake adapter: Setting snowflake.connector to ERROR (file logging only)
+[0m19:22:33.085772 [debug] [MainThread]: Snowflake adapter: Setting botocore to ERROR (file logging only)
+[0m19:22:33.085932 [debug] [MainThread]: Snowflake adapter: Setting boto3 to ERROR (file logging only)
+[0m19:22:33.213168 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'project_id', 'label': '48a929bf-8768-496e-bad9-ced86fa479e3', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10cf2df30>]}
+[0m19:22:33.244155 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'adapter_info', 'label': '48a929bf-8768-496e-bad9-ced86fa479e3', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10d297f00>]}
+[0m19:22:33.252490 [info ] [MainThread]: Registered adapter: snowflake=1.12.5
+[0m19:22:33.312688 [debug] [MainThread]: checksum: c7a5a50a5fd40c6064fab6579648b945bc1600075318ee408521527386663ab6, vars: {}, profile: warehouse, target: dev, version: 1.13.0rc1
+[0m19:22:33.402229 [debug] [MainThread]: Partial parsing enabled: 0 files deleted, 0 files added, 0 files changed.
+[0m19:22:33.402477 [debug] [MainThread]: Nothing changed, skipping partial parsing.
+[0m19:22:33.402622 [debug] [MainThread]: Partial parsing enabled, no changes found, skipping parsing
+[0m19:22:33.407671 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'load_project', 'label': '48a929bf-8768-496e-bad9-ced86fa479e3', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e49cd50>]}
+[0m19:22:33.497369 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m19:22:33.499842 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m19:22:33.510668 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m19:22:33.513085 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'resource_counts', 'label': '48a929bf-8768-496e-bad9-ced86fa479e3', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e21d040>]}
+[0m19:22:33.513326 [info ] [MainThread]: Found 6 models, 38 data tests, 1 source, 563 macros
+[0m19:22:33.513512 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '48a929bf-8768-496e-bad9-ced86fa479e3', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e4f74d0>]}
+[0m19:22:33.514737 [info ] [MainThread]: 
+[0m19:22:33.515076 [info ] [MainThread]: Concurrency: 1 threads (target='dev')
+[0m19:22:33.515261 [info ] [MainThread]: 
+[0m19:22:33.515531 [debug] [MainThread]: Acquiring new snowflake connection 'master'
+[0m19:22:33.518222 [debug] [ThreadPool]: Acquiring new snowflake connection 'list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts'
+[0m19:22:33.530772 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"
+[0m19:22:33.531055 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"} */;
+[0m19:22:33.531249 [debug] [ThreadPool]: Opening a new connection, currently in state init
+[0m19:22:35.112754 [debug] [ThreadPool]: SQL status: SUCCESS 3 in 1.581 seconds
+[0m19:22:35.123315 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"
+[0m19:22:35.123695 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts"} */
+[0m19:22:35.289051 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.165 seconds
+[0m19:22:35.292075 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_marts, now list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging)
+[0m19:22:35.294388 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"
+[0m19:22:35.294766 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"} */;
+[0m19:22:35.462763 [debug] [ThreadPool]: SQL status: SUCCESS 1 in 0.168 seconds
+[0m19:22:35.466750 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"
+[0m19:22:35.467225 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_staging
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging"} */
+[0m19:22:35.630657 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.163 seconds
+[0m19:22:35.632369 [debug] [ThreadPool]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_staging, now list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate)
+[0m19:22:35.633550 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"
+[0m19:22:35.633759 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate: show objects in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate
+    limit 10000
+    
+
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"} */;
+[0m19:22:35.832935 [debug] [ThreadPool]: SQL status: SUCCESS 2 in 0.199 seconds
+[0m19:22:35.836471 [debug] [ThreadPool]: Using snowflake connection "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"
+[0m19:22:35.836893 [debug] [ThreadPool]: On list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate: show user functions in GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "connection_name": "list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate"} */
+[0m19:22:35.996267 [debug] [ThreadPool]: SQL status: SUCCESS 0 in 0.159 seconds
+[0m19:22:36.003353 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'runnable_timing', 'label': '48a929bf-8768-496e-bad9-ced86fa479e3', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e4c6270>]}
+[0m19:22:36.007270 [debug] [Thread-1 (]: Began running node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:36.007952 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly list_GREENHOUSE_ANALYTICS_GREENHOUSE_DBT_intermediate, now model.greenhouse_analytics.fct_sensor_hourly)
+[0m19:22:36.008480 [debug] [Thread-1 (]: Began compiling node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:36.017075 [debug] [Thread-1 (]: Writing injected SQL for node "model.greenhouse_analytics.fct_sensor_hourly"
+[0m19:22:36.017900 [debug] [Thread-1 (]: Began executing node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:36.024944 [debug] [Thread-1 (]: Using snowflake connection "model.greenhouse_analytics.fct_sensor_hourly"
+[0m19:22:36.025322 [debug] [Thread-1 (]: On model.greenhouse_analytics.fct_sensor_hourly: WITH readings AS (
+    SELECT *
+    FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_intermediate.int_sensor_readings
+),
+
+hourly AS (
+    SELECT
+        measurement_hour_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+        unit,
+
+        COUNT(*) AS reading_count,
+
+        AVG(value) AS avg_value,
+        MIN(value) AS min_value,
+        MAX(value) AS max_value,
+        STDDEV_SAMP(value) AS stddev_value,
+
+        MIN(measured_at_utc) AS first_measured_at_utc,
+        MAX(measured_at_utc) AS last_measured_at_utc
+
+    FROM readings
+
+    GROUP BY
+        measurement_hour_utc,
+        gateway_id,
+        sensor_id,
+        measurement_type,
+        unit
+)
+
+SELECT *
+FROM hourly
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "model.greenhouse_analytics.fct_sensor_hourly"} */
+[0m19:22:36.482734 [debug] [Thread-1 (]: SQL status: SUCCESS 10 in 0.457 seconds
+[0m19:22:36.496070 [debug] [Thread-1 (]: Finished running node model.greenhouse_analytics.fct_sensor_hourly
+[0m19:22:36.497684 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:36.498355 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly model.greenhouse_analytics.fct_sensor_hourly, now test.greenhouse_analytics.assert_unique_hourly_grain)
+[0m19:22:36.498873 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:36.501457 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.assert_unique_hourly_grain"
+[0m19:22:36.502400 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:36.506221 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.assert_unique_hourly_grain"
+[0m19:22:36.506702 [debug] [Thread-1 (]: On test.greenhouse_analytics.assert_unique_hourly_grain: SELECT
+    measurement_hour_utc,
+    gateway_id,
+    sensor_id,
+    measurement_type,
+    unit,
+    COUNT(*) AS row_count
+
+FROM GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+
+GROUP BY 1, 2, 3, 4, 5
+HAVING COUNT(*) > 1
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.assert_unique_hourly_grain"} */
+[0m19:22:36.670385 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.163 seconds
+[0m19:22:36.674935 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.assert_unique_hourly_grain
+[0m19:22:36.675700 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:36.676544 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.assert_unique_hourly_grain, now test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e)
+[0m19:22:36.677115 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:36.695630 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e"
+[0m19:22:36.696547 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:36.699547 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e"
+[0m19:22:36.699859 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e: select avg_value
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where avg_value is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e"} */
+[0m19:22:36.848256 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.148 seconds
+[0m19:22:36.852604 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e
+[0m19:22:36.853372 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:36.854051 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_avg_value.f95bdfdb1e, now test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3)
+[0m19:22:36.854579 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:36.864924 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3"
+[0m19:22:36.865878 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:36.869439 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3"
+[0m19:22:36.869948 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3: select gateway_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where gateway_id is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3"} */
+[0m19:22:37.028920 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.158 seconds
+[0m19:22:37.031512 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3
+[0m19:22:37.032148 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:37.032791 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_gateway_id.e6664c36d3, now test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e)
+[0m19:22:37.033274 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:37.041355 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e"
+[0m19:22:37.041981 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:37.044968 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e"
+[0m19:22:37.045319 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e: select max_value
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where max_value is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e"} */
+[0m19:22:37.238597 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.193 seconds
+[0m19:22:37.242865 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e
+[0m19:22:37.243507 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:37.244185 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_max_value.08d748fe1e, now test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da)
+[0m19:22:37.244757 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:37.255778 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da"
+[0m19:22:37.256582 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:37.259654 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da"
+[0m19:22:37.260019 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da: select measurement_hour_utc
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where measurement_hour_utc is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da"} */
+[0m19:22:37.419893 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.159 seconds
+[0m19:22:37.421981 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da
+[0m19:22:37.422392 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:37.422842 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_hour_utc.3a8d3a82da, now test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96)
+[0m19:22:37.423242 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:37.429973 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96"
+[0m19:22:37.430577 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:37.433186 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96"
+[0m19:22:37.433530 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96: select measurement_type
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where measurement_type is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96"} */
+[0m19:22:37.585465 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.152 seconds
+[0m19:22:37.586813 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96
+[0m19:22:37.587090 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:37.587407 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_measurement_type.a24df42e96, now test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794)
+[0m19:22:37.587687 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:37.592329 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794"
+[0m19:22:37.592829 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:37.594745 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794"
+[0m19:22:37.594977 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794: select min_value
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where min_value is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794"} */
+[0m19:22:37.753308 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.158 seconds
+[0m19:22:37.756282 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794
+[0m19:22:37.756877 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:37.757504 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_min_value.9de2c8f794, now test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87)
+[0m19:22:37.758081 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:37.767087 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87"
+[0m19:22:37.768066 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:37.771116 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87"
+[0m19:22:37.771567 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87: select reading_count
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where reading_count is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87"} */
+[0m19:22:37.920743 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.149 seconds
+[0m19:22:37.922957 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87
+[0m19:22:37.923411 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:37.923871 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_reading_count.2ccde6fe87, now test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755)
+[0m19:22:37.924266 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:37.930771 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755"
+[0m19:22:37.931460 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:37.933898 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755"
+[0m19:22:37.934180 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755: select sensor_id
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where sensor_id is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755"} */
+[0m19:22:38.117077 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.182 seconds
+[0m19:22:38.121334 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755
+[0m19:22:38.122073 [debug] [Thread-1 (]: Began running node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:38.122971 [debug] [Thread-1 (]: Re-using an available connection from the pool (formerly test.greenhouse_analytics.not_null_fct_sensor_hourly_sensor_id.ce4ec7d755, now test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4)
+[0m19:22:38.123840 [debug] [Thread-1 (]: Began compiling node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:38.133421 [debug] [Thread-1 (]: Writing injected SQL for node "test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4"
+[0m19:22:38.134350 [debug] [Thread-1 (]: Began executing node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:38.137621 [debug] [Thread-1 (]: Using snowflake connection "test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4"
+[0m19:22:38.137979 [debug] [Thread-1 (]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4: select unit
+from GREENHOUSE_ANALYTICS.GREENHOUSE_DBT_marts.fct_sensor_hourly
+where unit is null
+
+
+
+  
+  limit 10
+/* {"app": "dbt", "dbt_version": "1.13.0rc1", "profile_name": "warehouse", "target_name": "dev", "node_id": "test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4"} */
+[0m19:22:38.281084 [debug] [Thread-1 (]: SQL status: SUCCESS 0 in 0.142 seconds
+[0m19:22:38.286840 [debug] [Thread-1 (]: Finished running node test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4
+[0m19:22:38.288642 [debug] [MainThread]: Connection 'master' was properly closed.
+[0m19:22:38.289123 [debug] [MainThread]: Connection 'test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4' was left open.
+[0m19:22:38.289525 [debug] [MainThread]: On test.greenhouse_analytics.not_null_fct_sensor_hourly_unit.23a2785fe4: Close
+[0m19:22:38.528493 [debug] [MainThread]: Command end result
+[0m19:22:38.572949 [debug] [MainThread]: Wrote artifact WritableManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/manifest.json
+[0m19:22:38.574768 [debug] [MainThread]: Wrote artifact SemanticManifest to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/semantic_manifest.json
+[0m19:22:38.576222 [debug] [MainThread]: Wrote artifact OsiDocument to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/osi_document.json
+[0m19:22:38.581893 [debug] [MainThread]: Wrote artifact RunExecutionResult to /Users/gregoryjoshua/Projects/greenhouse-iot-streaming-pipeline/warehouse/target/run_results.json
+[0m19:22:38.582173 [debug] [MainThread]: Excluded node 'assert_unique_hourly_grain' from results
+[0m19:22:38.582351 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_avg_value' from results
+[0m19:22:38.582509 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_gateway_id' from results
+[0m19:22:38.582658 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_max_value' from results
+[0m19:22:38.582803 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_measurement_hour_utc' from results
+[0m19:22:38.582946 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_measurement_type' from results
+[0m19:22:38.583089 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_min_value' from results
+[0m19:22:38.583227 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_reading_count' from results
+[0m19:22:38.583364 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_sensor_id' from results
+[0m19:22:38.583499 [debug] [MainThread]: Excluded node 'not_null_fct_sensor_hourly_unit' from results
+[0m19:22:38.583800 [info ] [MainThread]: Previewing node 'fct_sensor_hourly':
+| MEASUREMENT_HOUR_UTC | GATEWAY_ID | SENSOR_ID  | MEASUREMENT_TYPE     | UNIT            | READING_COUNT | ... |
+| -------------------- | ---------- | ---------- | -------------------- | --------------- | ------------- | --- |
+|  2026-11-01 23:00:00 | pi-001     | bme280-001 | relative_humidity    | percent         |           628 | ... |
+|  2026-10-31 18:00:00 | pi-001     | bme280-001 | air_temperature      | celsius         |           640 | ... |
+|  2026-11-01 10:00:00 | pi-001     | bme280-001 | air_temperature      | celsius         |           610 | ... |
+|  2026-11-03 05:00:00 | pi-001     | bme280-001 | relative_humidity    | percent         |           624 | ... |
+|  2026-11-02 18:00:00 | pi-001     | bme280-001 | atmospheric_pressure | hpa             |           637 | ... |
+|  2026-11-06 18:00:00 | pi-001     | soil-001   | soil_moisture        | raw_capacitance |           606 | ... |
+|  2026-11-07 10:00:00 | pi-001     | bme280-001 | atmospheric_pressure | hpa             |           634 | ... |
+|  2026-11-06 13:00:00 | pi-001     | bme280-001 | atmospheric_pressure | hpa             |           631 | ... |
+|  2026-10-30 03:00:00 | pi-001     | bme280-001 | atmospheric_pressure | hpa             |           606 | ... |
+|  2026-11-07 07:00:00 | pi-001     | bme280-001 | relative_humidity    | percent         |           633 | ... |
+
+[0m19:22:38.586887 [debug] [MainThread]: Resource report: {"command_name": "show", "command_success": true, "command_wall_clock_time": 5.674046, "process_in_blocks": "0", "process_kernel_time": 0.263769, "process_mem_max_rss": "184877056", "process_out_blocks": "0", "process_user_time": 1.594003}
+[0m19:22:38.587376 [debug] [MainThread]: Command `dbt show` succeeded at 19:22:38.587327 after 5.67 seconds
+[0m19:22:38.587620 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e578c50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e586c50>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10e587490>]}
+[0m19:22:38.587836 [debug] [MainThread]: Flushing usage events
+[0m19:22:39.018283 [debug] [MainThread]: An error was encountered while trying to flush usage events

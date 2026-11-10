@@ -20,7 +20,8 @@ Most of the pipeline is sensor-agnostic. A sensor that emits a measurement type 
 | SQLite outbox, Kafka producer, Kafka topic | No | Events are stored and forwarded as opaque JSON |
 | [Live consumer](../consumers/live/consumer.py) | No | It does not check measurement type or unit. It keys Redis by `gateway_id`/`sensor_id`/`measurement_type` |
 | Redis | No | New keys appear on first event. Keys never expire, so cleanup is manual |
-| [FastAPI](../api/main.py) | No | It returns every `greenhouse:latest:*` hash. `value` must be numeric |
+| [FastAPI](../api/main.py) (live) | No | It returns every `greenhouse:latest:*` hash. `value` must be numeric |
+| FastAPI history / Snowflake marts | Usually no | New `measurement_type` values appear in history after events reach Snowflake and dbt rebuilds marts. No API code change for an existing type |
 | [Dashboard](../dashboard/src/App.jsx) | Optional | New types get a generic label and unformatted value. Edit for a proper label, order, or number format |
 | Tests | When you change code that has tests or add logic | See [Tests](#tests) |
 | Docs | Yes | See [Documentation updates](#documentation-updates) |
@@ -262,7 +263,8 @@ Events travel as opaque JSON after the gateway, so verify the following.
 | **Kafka** | Nothing. Same topic, key is `event_id`. No schema registry |
 | **Consumer** | Event has all seven fields it checks and `value` is numeric, or it is logged as malformed and skipped (the offset is committed, so the event is not retried) |
 | **Redis** | A key `greenhouse:latest:{gateway_id}:{sensor_id}:{measurement_type}` appears. Keys never expire |
-| **API** | The reading appears in `GET /api/v1/sensors/latest` with a numeric `value`. A non-numeric stored value makes the whole endpoint return 503 |
+| **API (live)** | The reading appears in `GET /api/v1/sensors/latest` with a numeric `value`. A non-numeric stored value makes the whole endpoint return 503 |
+| **API (history)** | After warehouse load and `dbt run`, `GET /api/v1/history/series` returns points for that `sensor_id` and `measurement_type` |
 | **Dashboard** | The card appears at the next 3 s poll. Check how it renders (below) |
 
 Dashboard behavior for new data, from `App.jsx`:
@@ -285,7 +287,8 @@ For a new sensor:
 | Firmware-only (existing schema) | Manual: REPL read on the bench, then watch `Published:` lines and the MQTT stream ([Operations](operations.md#1-esp32-publishes-but-mqtt-shows-nothing)). MicroPython code has no automated tests |
 | Schema change | Extend `tests/schemas/test_sensor_events.py` and run the validation script ([Data contracts](data-contracts.md#testing-a-schema-change-before-deployment)) |
 | Changed gateway code | Add pytest tests under `tests/gateway/` |
-| Changed consumer or API code | Add tests under `tests/consumers/` or `tests/api/` (these use Redis through `TEST_REDIS_URL`) |
+| Changed consumer or live API code | Add tests under `tests/consumers/` or `tests/api/` (Redis via `TEST_REDIS_URL`) |
+| Changed history/Snowflake code | Add or extend `tests/api/test_history.py` (mock Snowflake; no live warehouse required in CI) |
 
 New test files anywhere under `tests/` run in CI without workflow changes. Run the suite locally:
 

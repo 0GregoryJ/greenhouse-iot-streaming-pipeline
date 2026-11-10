@@ -47,6 +47,20 @@ services:
       REDIS_PORT: 6379
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
 
+      SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT}
+      SNOWFLAKE_USER: ${SNOWFLAKE_USER}
+      SNOWFLAKE_ROLE: ${SNOWFLAKE_ROLE}
+      SNOWFLAKE_WAREHOUSE: ${SNOWFLAKE_WAREHOUSE}
+      SNOWFLAKE_DATABASE: ${SNOWFLAKE_DATABASE}
+      SNOWFLAKE_SCHEMA: ${SNOWFLAKE_SCHEMA}
+
+      SNOWFLAKE_PRIVATE_KEY_PATH: /run/secrets/snowflake_api_key.pem
+      SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${SNOWFLAKE_PRIVATE_KEY_PASSPHRASE:?Snowflake private key passphrase required}
+
+    volumes:
+      # Host PEM from SNOWFLAKE_KEY_HOST_PATH; readable by the container user (appuser).
+      - ${SNOWFLAKE_KEY_HOST_PATH:?Snowflake private key path required}:/run/secrets/snowflake_api_key.pem:ro
+
     ports:
       # Expose the API to your MacBook, not the entire network.
       # On EC2, an HTTPS reverse proxy will connect locally.

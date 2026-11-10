@@ -1,9 +1,14 @@
-
 """
-Read-only HTTP API for live greenhouse sensor measurements.
+Read-only HTTP API for greenhouse sensor measurements.
 
-Kafka consumers maintain the Redis materialized view.
-This service reads that view without directly accessing Kafka.
+Live data:
+    Kafka -> Redis -> FastAPI
+
+Historical data:
+    Kafka -> S3 -> Snowflake -> FastAPI
+
+The API serves both live and historical measurements without
+directly consuming Kafka events.
 """
 
 import logging
@@ -14,9 +19,20 @@ import redis
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.routes.history import router as history_router
+
+
+# ---------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("greenhouse-api")
+
+
+# ---------------------------------------------------------------------
+# Redis connection
+# ---------------------------------------------------------------------
 
 redis_client = redis.Redis(
     host=os.getenv("REDIS_HOST", "redis"),
@@ -27,27 +43,52 @@ redis_client = redis.Redis(
 )
 
 
+# ---------------------------------------------------------------------
+# Application lifecycle
+# ---------------------------------------------------------------------
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Verify the serving database is available on startup."""
+    """
+    Verify Redis is available when the API starts.
+
+    Historical Snowflake connections are opened on demand
+    by the repository layer, not during application startup.
+    """
     redis_client.ping()
     logger.info("Connected to Redis")
-    yield
-    redis_client.close()
 
+    try:
+        yield
+    finally:
+        redis_client.close()
+        logger.info("Redis connection closed")
+
+
+# ---------------------------------------------------------------------
+# FastAPI application
+# ---------------------------------------------------------------------
 
 app = FastAPI(
     title="Greenhouse Monitoring API",
-    description="Read-only API serving the latest IoT sensor measurements.",
-    version="0.1.0",
+    description=(
+        "Read-only API serving live greenhouse sensor measurements "
+        "from Redis and historical analytics from Snowflake."
+    ),
+    version="0.2.0",
     lifespan=lifespan,
 )
 
-# Restrict browser access to explicitly configured frontend origins.
+
+# ---------------------------------------------------------------------
+# CORS configuration
+# ---------------------------------------------------------------------
+
 allowed_origins = [
     origin.strip()
     for origin in os.getenv(
-        "CORS_ORIGINS", "http://localhost:5173"
+        "CORS_ORIGINS",
+        "http://localhost:5173",
     ).split(",")
     if origin.strip()
 ]
@@ -60,27 +101,53 @@ app.add_middleware(
 )
 
 
+# ---------------------------------------------------------------------
+# Register routers
+# ---------------------------------------------------------------------
+
+app.include_router(history_router)
+
+
+# ---------------------------------------------------------------------
+# Health check
+# ---------------------------------------------------------------------
+
 @app.get("/health")
 def health():
-    """Check Redis connectivity, not just API process availability."""
+    """
+    Verify Redis connectivity, not just API process availability.
+
+    Snowflake is not included in this health check because
+    historical queries are performed on demand.
+    """
     try:
         redis_client.ping()
         return {"status": "ok"}
+
     except redis.RedisError:
+        logger.exception("Redis health check failed")
         raise HTTPException(
             status_code=503,
             detail="Redis is unavailable",
         )
 
 
+# ---------------------------------------------------------------------
+# Live sensor measurements
+# ---------------------------------------------------------------------
+
 @app.get("/api/v1/sensors/latest")
 def get_latest_readings():
-    """Return the latest known measurement for each sensor and metric."""
+    """
+    Return the latest known measurement for each sensor and metric.
+
+    The live Kafka consumer maintains these readings in Redis.
+    """
     try:
         readings = []
         cursor = 0
 
-        # SCAN avoids blocking Redis like the KEYS command can.
+        # SCAN avoids blocking Redis like KEYS can.
         while True:
             cursor, keys = redis_client.scan(
                 cursor=cursor,

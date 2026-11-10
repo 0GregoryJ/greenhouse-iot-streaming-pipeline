@@ -5,25 +5,8 @@ from unittest.mock import Mock
 import pytest
 import redis
 
-from fastapi.testclient import TestClient
-
 from api import main as api
 from consumers.live import consumer as live
-
-
-@pytest.fixture
-def client(monkeypatch, redis_client):
-    """Use isolated test Redis for all API calls."""
-
-    monkeypatch.setattr(
-        api,
-        "redis_client",
-        redis_client,
-    )
-
-    # Avoid entering the lifespan context here;
-    # Redis availability is explicitly tested below.
-    return TestClient(api.app)
 
 
 def test_health_success(client):

@@ -22,7 +22,7 @@
 
 # Greenhouse IoT Streaming Pipeline
 
-An end-to-end streaming pipeline for greenhouse temperature, humidity, atmospheric pressure, and soil moisture. Sensors on an ESP32 publish readings over MQTT to a Raspberry Pi, which validates and buffers them in SQLite before forwarding them to Kafka on AWS. A live consumer keeps the latest values in Redis for a React dashboard served by FastAPI, and a historical consumer archives every event to S3.
+An end-to-end streaming pipeline for greenhouse temperature, humidity, atmospheric pressure, and soil moisture. Sensors on an ESP32 publish readings over MQTT to a Raspberry Pi, which validates and buffers them in SQLite before forwarding them to Kafka on AWS. A live consumer keeps the latest values in Redis for a React dashboard served by FastAPI. A historical consumer archives every event to S3; dbt models in Snowflake power a history API for analytics.
 
 **Live:** [Dashboard](https://greenhouse.gregoryjoshua.com) · [API health](https://api.gregoryjoshua.com/health)
 
@@ -46,21 +46,25 @@ flowchart LR
     hist["Historical consumer"] --> s3[("S3<br/>JSON Lines, gzip")]
   end
 
+  snow[("Snowflake")]
+  dbt["dbt marts"]
   dash["React dashboard<br/>Netlify"]
 
   esp -->|"MQTT QoS 1"| mqtt
   prod -->|"Tailscale"| kafka
   kafka -->|"Tailscale"| consumer
   kafka -->|"Tailscale"| hist
+  s3 --> snow
+  snow --> dbt
+  dbt --> api
   dash -->|"HTTPS poll"| api
 
   ingest -.-> dlq[("Rejected events")]
   kafka -.-> flink["Flink rolling metrics"]
-  s3 -.-> snow[("Snowflake")]
-  snow -.-> dbt["dbt"]
+  dash -.-> charts["History charts"]
 
   classDef planned fill:#fff,stroke:#999,stroke-dasharray:5 5,color:#777;
-  class dlq,flink,snow,dbt planned;
+  class dlq,flink,charts planned;
 ```
 
 Solid boxes are implemented. Dashed boxes are on the [roadmap](#roadmap). Details: [Architecture](docs/architecture.md).
@@ -72,7 +76,8 @@ Solid boxes are implemented. Dashed boxes are on the [roadmap](#roadmap). Detail
 3. A producer sends pending rows to Kafka and marks a row delivered only after Kafka acknowledges it.
 4. The live consumer updates the latest reading per sensor and measurement in Redis, committing its Kafka offset after the write.
 5. The historical consumer, in its own consumer group, batches events into gzip-compressed JSON Lines objects in S3 (partitioned by date and named by Kafka offset range) and commits only after the upload succeeds.
-6. FastAPI reads Redis, and the dashboard polls it every 3 seconds, flagging readings older than 30 seconds as stale.
+6. The S3 archive is loaded into Snowflake. dbt builds staging, intermediate, and mart models (hourly and daily facts) with `event_id` deduplication.
+7. FastAPI serves live readings from Redis and historical series from Snowflake marts (`GET /api/v1/history/series`). The dashboard polls the live endpoint every 3 seconds and flags readings older than 30 seconds as stale.
 
 Delivery is at-least-once, with deduplication by `event_id`.
 
@@ -82,7 +87,7 @@ Delivery is at-least-once, with deduplication by `event_id`.
 - **Delivery semantics.** Persistent QoS 1 sessions, an acknowledged idempotent Kafka producer, manual offset commits, and idempotent Redis updates (a Lua script rejects older timestamps).
 - **Versioned data contracts.** JSON Schema v1 and v2 coexist, and the gateway validates by `schema_version`.
 - **Replayable streaming.** Kafka retains 7 days of events, and two independent consumer groups read the same topic: a live view and a durable archive.
-- **Historical archive.** Every event lands in S3 as date-partitioned, offset-ranged `.jsonl.gz` objects carrying Kafka lineage fields, ready for a warehouse load.
+- **Historical archive and warehouse.** Every event lands in S3 as date-partitioned, offset-ranged `.jsonl.gz` objects. dbt models in [`warehouse/`](warehouse/) turn the Snowflake raw table into hourly and daily marts; FastAPI exposes them on `/api/v1/history/series` with JWT key auth.
 - **Operations.** systemd services and timers, Docker Compose, a gateway health check with exit codes, and deployment verification scripts.
 - **Testing and CI/CD.** pytest suites for schemas, ingest, cleanup, health, the live consumer (offset-commit ordering, Redis timestamp guard), and the API against a real Redis. GitHub Actions runs them with a dashboard lint and build, then deploys to the Pi and EC2 over Tailscale and SSH on `main`.
 - **Decision records.** The reasoning behind the main design choices is written down as [ADRs](docs/decisions/README.md).
@@ -118,9 +123,9 @@ Planned work, grouped by theme. Items are not scheduled.
 
 **Analytics and features**
 
-- **Historical analytics.** Load the S3 archive into Snowflake (external stage or Snowpipe), deduplicate on `event_id` in dbt models, and add historical views to the dashboard.
+- **Dashboard history views.** Wire the existing `/api/v1/history/series` endpoint into trend charts and per-sensor history on the React dashboard.
+- **Warehouse automation.** Schedule or further automate the S3 → Snowflake load and `dbt run` (profiles and orchestration live outside the API containers).
 - **Flink.** Event-time rolling-window metrics, such as 5-minute averages and moisture trends.
-- **Dashboard.** Trend charts and per-sensor history.
 - **More sensors.** Additional measurement types (for example light or CO₂) through new schema versions.
 
 ## Documentation
@@ -135,6 +140,7 @@ Planned work, grouped by theme. Items are not scheduled.
 | [Decision records](docs/decisions/README.md) | ADRs for the main design choices |
 | [ESP32 firmware](firmware/esp32/README.md) | Hardware, MicroPython flashing, wiring, configuration |
 | [Infrastructure](infrastructure/README.md) | Component-level infrastructure notes |
+| [Warehouse (dbt)](warehouse/) | Staging, intermediate, and mart models over Snowflake |
 
 Configuration templates: [`.env.example`](.env.example), [`firmware/esp32/config.example.py`](firmware/esp32/config.example.py). Schemas: [`schemas/`](schemas/).
 
@@ -147,7 +153,8 @@ gateway/             Raspberry Pi ingest, producer, cleanup, health, migrations
 schemas/             Versioned event schemas and examples
 consumers/live/      Kafka to Redis consumer
 consumers/historical/ Kafka to S3 archive consumer
-api/                 FastAPI service
+api/                 FastAPI service (live Redis + Snowflake history)
+warehouse/           dbt project (staging, intermediate, marts)
 dashboard/           React / Vite dashboard
 infrastructure/      systemd, Mosquitto, Kafka, Caddy config and scripts
 tests/               pytest suites (schemas, gateway, consumer, API)

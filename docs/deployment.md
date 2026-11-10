@@ -72,7 +72,7 @@ The workflow expects the following on the targets:
 | --- | --- |
 | Tailnet | The ACLs allow `tag:ci` to reach SSH on the Pi and the serving host |
 | Pi | User `greenhousepi`, the repository at the path above with `.venv`, and passwordless sudo for `systemctl restart` and `systemctl is-active` on the two services |
-| Serving host | The repository at `~/greenhouse-iot-streaming-pipeline` with its `.env` (including `S3_BUCKET`), a deploy user that can run `docker compose` without `sudo`, and an instance profile that allows `s3:PutObject` on the bucket |
+| Serving host | The repository at `~/greenhouse-iot-streaming-pipeline` with its `.env` (including `S3_BUCKET` and Snowflake settings), the Snowflake PEM at `SNOWFLAKE_KEY_HOST_PATH`, a deploy user that can run `docker compose` without `sudo`, and an instance profile that allows `s3:PutObject` on the bucket |
 | Both | A clone on `main` that can fast-forward from `origin` |
 
 ### What is not deployed by CI
@@ -99,7 +99,7 @@ docker stop greenhouse-test-redis
 | `tests/schemas/` | v1 and v2 JSON Schema accept and reject cases |
 | `tests/gateway/` | `on_message` persistence, schema validation in ingest, cleanup, health thresholds |
 | `tests/consumers/` | `parse_event`, the Redis timestamp guard, Redis failure propagation, offset commit after the Redis write |
-| `tests/api/` | `/health`, `/api/v1/sensors/latest` with real, sorted, empty, and invalid stored data, Redis unavailable |
+| `tests/api/` | `/health`, `/api/v1/sensors/latest` (live Redis), `/api/v1/history/series` (Snowflake call mocked), invalid `period` validation |
 
 ## Where things run
 
@@ -109,8 +109,9 @@ docker stop greenhouse-test-redis
 | Mosquitto | Raspberry Pi Zero 2 W | systemd (`mosquitto`) | [`infrastructure/mosquitto/greenhouse.conf`](../infrastructure/mosquitto/greenhouse.conf) |
 | Ingest, producer, cleanup, health | Raspberry Pi | systemd | [`gateway/`](../gateway/), [`infrastructure/systemd/raspberry_pi/`](../infrastructure/systemd/raspberry_pi/) |
 | Kafka | EC2 #1 (`t3.small`) | systemd (`kafka`) | [`infrastructure/kafka/greenhouse.properties.example`](../infrastructure/kafka/greenhouse.properties.example), [`infrastructure/systemd/kafka_EC2/kafka.service`](../infrastructure/systemd/kafka_EC2/kafka.service) |
-| Live consumer, historical consumer, Redis, API | EC2 #2 (`t4g.small`) | Docker Compose | [`compose.yaml`](../compose.yaml) |
+| Live consumer, historical consumer, Redis, API | EC2 #2 (`t4g.small`) | Docker Compose | [`compose.yaml`](../compose.yaml), [`api/`](../api/) |
 | S3 bucket (historical archive) | AWS | Console or CLI; name in `.env` | n/a |
+| Snowflake + dbt marts | Snowflake | Account/load outside the repo; models in Git | [`warehouse/`](../warehouse/) |
 | Caddy | EC2 #2 | systemd (`caddy`) | [`infrastructure/caddy/caddyfile`](../infrastructure/caddy/caddyfile) (template) |
 | Dashboard | Netlify | Git push | [`dashboard/`](../dashboard/) |
 | Simulator | Mac (optional) | Run by hand | [`sensor_simulator/simulate.py`](../sensor_simulator/simulate.py) |
@@ -124,7 +125,7 @@ No secret values are committed. `.env` and `firmware/esp32/config.py` are git-ig
 | Location | Used by | Contents |
 | --- | --- | --- |
 | `.env` on the Pi (from [`.env.example`](../.env.example)) | `ingest.py`, `kafka_producer.py` | `MQTT_USERNAME`, `MQTT_PASSWORD`, `KAFKA_BOOTSTRAP_SERVERS`, and optional `MQTT_PORT`, `MQTT_TOPIC`, `KAFKA_TOPIC`, `KAFKA_BATCH_SIZE`, `KAFKA_RETRY_SECONDS`, `KAFKA_DELIVERY_TIMEOUT_MS` |
-| `.env` on the serving host | `compose.yaml` | `KAFKA_BOOTSTRAP_SERVERS` and `S3_BUCKET` (required); `KAFKA_TOPIC` (default `greenhouse.sensor-readings`), `LIVE_KAFKA_CONSUMER_GROUP` (`greenhouse-live-dev`), `HISTORICAL_KAFKA_CONSUMER_GROUP` (`greenhouse-historical`), `HISTORICAL_BATCH_SIZE` (240), `HISTORICAL_FLUSH_SECONDS` (300), `S3_PREFIX` (`raw/sensor_events`), `AWS_REGION` (`us-east-2`), `CORS_ORIGINS` (default `http://localhost:5173`; include the dashboard origin in production) |
+| `.env` on the serving host | `compose.yaml` | `KAFKA_BOOTSTRAP_SERVERS`, `S3_BUCKET`, `SNOWFLAKE_KEY_HOST_PATH`, and `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` (required); Snowflake account settings (`SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_WAREHOUSE`, `SNOWFLAKE_DATABASE`, `SNOWFLAKE_SCHEMA`); `KAFKA_TOPIC` (default `greenhouse.sensor-readings`), `LIVE_KAFKA_CONSUMER_GROUP` (`greenhouse-live-dev`), `HISTORICAL_KAFKA_CONSUMER_GROUP` (`greenhouse-historical`), `HISTORICAL_BATCH_SIZE` (240), `HISTORICAL_FLUSH_SECONDS` (300), `S3_PREFIX` (`raw/sensor_events`), `AWS_REGION` (`us-east-2`), `CORS_ORIGINS` (default `http://localhost:5173`; include the dashboard origin in production) |
 | `.env` on a Mac | `simulate.py` | `MQTT_HOST`, `MQTT_PORT`, `MQTT_USERNAME`, `MQTT_PASSWORD`, `MQTT_TOPIC` |
 | `/etc/mosquitto/passwd` on the Pi | Mosquitto | Password hashes, created with `mosquitto_passwd` |
 | `firmware/esp32/config.py` (from `config.example.py`) | ESP32 | Wi-Fi and MQTT credentials, Pi LAN address, `GATEWAY_ID`, sensor IDs, sample interval |
@@ -135,7 +136,8 @@ No secret values are committed. `.env` and `firmware/esp32/config.py` are git-ig
 Notes:
 
 - `ingest.py` runs beside Mosquitto and always connects to `localhost`. It reads `MQTT_USERNAME`, `MQTT_PASSWORD`, `MQTT_PORT` (default 1883), and `MQTT_TOPIC` (default `greenhouse/telemetry`); a blank value uses the default. `MQTT_HOST` is used by the simulator only.
-- `.env.example` is grouped by host and pre-fills the application defaults (topics, consumer groups, batch sizes, flush interval, S3 prefix, region, CORS origin). Credentials, `MQTT_HOST`, `KAFKA_BOOTSTRAP_SERVERS`, and `S3_BUCKET` are blank and need values on the hosts that use them. A blank value counts as set, so delete a line rather than leaving it empty (`KAFKA_BATCH_SIZE=` fails integer parsing).
+- `.env.example` is grouped by host and pre-fills the application defaults (topics, consumer groups, batch sizes, flush interval, S3 prefix, region, CORS origin, Snowflake placeholders). Credentials, `MQTT_HOST`, `KAFKA_BOOTSTRAP_SERVERS`, `S3_BUCKET`, `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_KEY_HOST_PATH`, and `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` need real values on the hosts that use them. A blank value counts as set, so delete a line rather than leaving it empty (`KAFKA_BATCH_SIZE=` fails integer parsing).
+- Compose mounts `SNOWFLAKE_KEY_HOST_PATH` read-only into the API container at `/run/secrets/snowflake_api_key.pem` and sets `SNOWFLAKE_PRIVATE_KEY_PATH` to that path. The PEM must exist on the host before `docker compose up` and be readable by the container user (`appuser`). Prefer `chmod 644` on a dedicated key file, or ownership that Docker can read.
 - `.env` is read when a process starts. After editing it, restart the service (`systemctl restart …`) or recreate containers (`docker compose up -d`).
 - Mosquitto uses one password file; a separate account per device keeps credentials individually revocable.
 - `chmod 600 .env` restricts the file to its owner.
@@ -278,19 +280,36 @@ bash infrastructure/scripts/verify-deployment.sh kafka
 
 ## Serving host (EC2 #2)
 
-Docker Compose runs `redis` (`redis:7-alpine`, AOF persistence, volume `redis_data`), `live-consumer`, `historical-consumer`, and `api` (published only on `127.0.0.1:8000`). All four use `restart: unless-stopped`; the historical consumer has a 60 s `stop_grace_period` so it can upload and commit pending batches on shutdown. Caddy runs on the host under systemd.
+Docker Compose runs `redis` (`redis:7-alpine`, AOF persistence, volume `redis_data`), `live-consumer`, `historical-consumer`, and `api` (published only on `127.0.0.1:8000`). All four use `restart: unless-stopped`; the historical consumer has a 60 s `stop_grace_period` so it can upload and commit pending batches on shutdown. The API container mounts the Snowflake RSA key from `SNOWFLAKE_KEY_HOST_PATH` and installs `snowflake-connector-python` from [`requirements/api.txt`](../requirements/api.txt). Caddy runs on the host under systemd.
 
 ### Initial setup
 
-Requirements: Docker with Compose, Tailscale (the consumers reach Kafka over it), Caddy, a DNS name for the API, ports 80 and 443 open publicly, an S3 bucket, and an IAM instance profile on the instance that allows `s3:PutObject` on `arn:aws:s3:::<bucket>/raw/sensor_events/*`. The historical consumer obtains credentials from the instance metadata service inside its container. With IMDSv2 this needs the instance's metadata hop limit set to 2 (`aws ec2 modify-instance-metadata-options --instance-id <id> --http-put-response-hop-limit 2`), because Docker's bridge network adds a network hop. For CI deploys, the deploy user must be able to run `docker compose` without `sudo` (for example by membership in the `docker` group).
+Requirements: Docker with Compose, Tailscale (the consumers reach Kafka over it), Caddy, a DNS name for the API, ports 80 and 443 open publicly, an S3 bucket, Snowflake account access for the API user, the RSA private key on disk, and an IAM instance profile on the instance that allows `s3:PutObject` on `arn:aws:s3:::<bucket>/raw/sensor_events/*`. The historical consumer obtains AWS credentials from the instance metadata service inside its container. With IMDSv2 this needs the instance's metadata hop limit set to 2 (`aws ec2 modify-instance-metadata-options --instance-id <id> --http-put-response-hop-limit 2`), because Docker's bridge network adds a network hop. For CI deploys, the deploy user must be able to run `docker compose` without `sudo` (for example by membership in the `docker` group).
 
 ```bash
 git clone https://github.com/0GregoryJ/greenhouse-iot-streaming-pipeline.git
 cd greenhouse-iot-streaming-pipeline
-cp .env.example .env      # set KAFKA_BOOTSTRAP_SERVERS, S3_BUCKET, AWS_REGION, CORS_ORIGINS
+cp .env.example .env      # set KAFKA_BOOTSTRAP_SERVERS, S3_BUCKET, AWS_REGION, CORS_ORIGINS,
+                         # Snowflake account vars, SNOWFLAKE_KEY_HOST_PATH, passphrase
+# Ensure the PEM exists and is readable by Docker, for example:
+#   chmod 644 "$SNOWFLAKE_KEY_HOST_PATH"
 sudo docker compose config --quiet
 sudo docker compose up -d --build
 ```
+
+### dbt warehouse
+
+The dbt project lives in [`warehouse/`](../warehouse/) (`profile: warehouse`, package `greenhouse_analytics`). It expects a Snowflake source `GREENHOUSE_ANALYTICS.RAW.SENSOR_EVENTS` and builds staging, intermediate, and mart models. Run it from a machine that has Snowflake credentials in a dbt profile (not from the API container):
+
+```bash
+pip install -r requirements/dbt.txt
+cd warehouse
+dbt deps   # if you add packages later
+dbt run
+dbt test
+```
+
+Keep the API's `SNOWFLAKE_SCHEMA` aligned with the schema where mart tables are built (default `GREENHOUSE_DBT_MARTS`).
 
 ### Updating containers
 

@@ -138,7 +138,7 @@ Rules for a new version:
 2. Register it in the `SCHEMAS` dict in [`gateway/ingest.py`](../gateway/ingest.py). Schemas are loaded at process start, so ingest must be restarted.
 3. Bump `SCHEMA_VERSION` in the firmware's `main.py` only after the gateway accepts the new version.
 4. Do not retire a version while old events may still be in an MQTT queue, the SQLite outbox, or Kafka (168 h by default). The producer and consumer do not look at `schema_version`, so retained events of old versions still flow.
-5. Aggregating consumers (such as the planned Flink, Snowflake, and dbt work) handle every version present in retained data and deduplicate on `event_id`.
+5. Aggregating consumers and warehouse models (dbt staging already deduplicates on `event_id`; Flink, if added, must do the same) handle every version present in retained data.
 
 ## What to check after a contract change
 
@@ -153,7 +153,8 @@ Rules for a new version:
 | Kafka topic | No registry; key is `event_id` | Only if key or topic design changes |
 | [`consumers/live/consumer.py`](../consumers/live/consumer.py) | Reads the seven fields, ignores the rest | Only if the live view needs a new field, or the Redis key structure changes |
 | Redis | New keys appear automatically | Only if key structure or stored fields change. Old keys need manual cleanup |
-| [`api/main.py`](../api/main.py) | Builds the response from fixed hash fields; `value` must be numeric | Only if the response shape changes |
+| [`api/main.py`](../api/main.py) | Builds the live response from fixed hash fields; `value` must be numeric | Only if the live response shape changes |
+| [`api/repositories/snowflake.py`](../api/repositories/snowflake.py) / dbt marts | History series reads fixed mart columns | Only if mart grain or column names change |
 | [`dashboard/src/App.jsx`](../dashboard/src/App.jsx) | Label and order in `METRICS`; `formatValue` for the unit | Optional for new types (generic fallback exists); needed for a unit that requires special formatting |
 | `tests/` | Extend `tests/schemas/` (and `tests/gateway/test_ingest.py` for gateway behavior) | Schema or code changes |
 | `docs/` | This file, [Adding a sensor](adding-a-sensor.md), the root README | Always |

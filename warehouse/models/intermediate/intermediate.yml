@@ -1,0 +1,81 @@
+
+version: 2
+
+models:
+  - name: int_sensor_readings
+    description: >
+      Valid, deduplicated greenhouse sensor measurements
+      with UTC-normalized timestamps and reusable time
+      dimensions. Source for environmental analytics marts.
+
+    columns:
+      - name: event_id
+        data_tests:
+          - unique
+          - not_null
+
+      - name: gateway_id
+        data_tests:
+          - not_null
+
+      - name: sensor_id
+        data_tests:
+          - not_null
+
+      - name: measured_at_utc
+        description: Sensor measurement timestamp normalized to UTC.
+        data_tests:
+          - not_null
+
+      - name: measurement_hour_utc
+        description: Start of the UTC hour containing the measurement.
+        data_tests:
+          - not_null
+
+      - name: measurement_date_utc
+        description: UTC calendar date of the measurement.
+        data_tests:
+          - not_null
+
+      - name: measurement_type
+        data_tests:
+          - not_null
+
+      - name: value
+        data_tests:
+          - not_null
+
+      - name: unit
+        data_tests:
+          - not_null
+
+  - name: int_sensor_event_audit
+    description: >
+      One row per raw Snowflake sensor record, preserving
+      duplicate and validity information prior to staging
+      deduplication.
+
+    columns:
+      - name: source_file
+        data_tests:
+          - not_null
+
+      - name: source_file_row
+        data_tests:
+          - not_null
+
+      - name: loaded_at
+        data_tests:
+          - not_null
+
+      - name: is_duplicate
+        description: Whether this record repeats an event_id
+          retained in another raw record.
+        data_tests:
+          - not_null
+
+      - name: is_valid
+        description: Whether required analytical fields are present
+          and parseable.
+        data_tests:
+          - not_null

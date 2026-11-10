@@ -21,7 +21,7 @@ A second Kafka consumer, [`consumers/historical/consumer.py`](../../consumers/hi
 ## Consequences
 
 - Every event accepted by the gateway is retained in S3 as the long-term record, at negligible storage cost, with no new database to operate.
-- Hive-style date partitions and the Kafka lineage fields make the archive directly loadable by Snowflake external tables, Athena, or Spark, and let a loader deduplicate on `event_id` and audit gaps by offset range.
+- Hive-style date partitions and the Kafka lineage fields make the archive loadable into Snowflake (and usable from Athena or Spark). dbt staging deduplicates on `event_id`; the history API reads the resulting marts ([ADR 0013](0013-snowflake-history-api-with-jwt-key.md)).
 - Delivery to S3 is at-least-once per batch: a crash between upload and commit re-uploads the batch, so duplicates across objects are possible and downstream loads deduplicate on `event_id`.
 - Data reaches S3 with up to five minutes of delay, which is acceptable for history and keeps the object count small (about 300 objects per day at the current rate).
 - Lag on the historical group is normally non-zero (up to one batch); monitoring should allow for that.

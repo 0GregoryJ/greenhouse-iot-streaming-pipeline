@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: raw
+    database: GREENHOUSE_ANALYTICS
+    schema: RAW
+    tables:
+      - name: sensor_events
+        identifier: SENSOR_EVENTS
+        description: >
+          Raw greenhouse sensor events ingested from Kafka,
+          archived in S3, and loaded into Snowflake.
