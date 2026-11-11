@@ -130,6 +130,7 @@ jobs:
       SNOWFLAKE_ROLE: ${{ vars.SNOWFLAKE_DBT_ROLE }}
       SNOWFLAKE_PRIVATE_KEY_PASSPHRASE: ${{ secrets.SNOWFLAKE_DBT_KEY_PASSPHRASE }}
 
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -174,9 +175,8 @@ jobs:
                 database: GREENHOUSE_ANALYTICS
                 schema: GREENHOUSE_DBT
                 threads: 4
-                authenticator: SNOWFLAKE_JWT
-                private_key_file: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
-                private_key_file_pwd: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
+                private_key_path: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PATH') }}"
+                private_key_passphrase: "{{ env_var('SNOWFLAKE_PRIVATE_KEY_PASSPHRASE') }}"
           EOF
 
       - name: Verify Snowflake connection
