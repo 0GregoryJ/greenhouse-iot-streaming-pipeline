@@ -71,9 +71,9 @@ describe("buildInsights", () => {
 
     assert.equal(insights.length, 3);
     assert.equal(insights[0].key, "low");
-    assert.match(insights[0].detail, /18\.0 °C/);
+    assert.match(insights[0].detail, /64\.4 °F/);
     assert.equal(insights[1].key, "high");
-    assert.match(insights[1].detail, /24\.0 °C/);
+    assert.match(insights[1].detail, /75\.2 °F/);
     assert.equal(insights[2].key, "change");
     assert.match(insights[2].detail, /higher/);
   });

@@ -1,3 +1,5 @@
+import { formatValue } from "./format.js";
+
 /**
  * Weighted average of aggregated points: sum(avg * count) / sum(count).
  * Min/max are extrema of the point-level min/max fields.
@@ -110,24 +112,8 @@ export function buildInsights(points, summary) {
 }
 
 function formatInsightValue(value, unit) {
-  if (value === null || value === undefined || !Number.isFinite(Number(value))) {
-    return "—";
-  }
-
-  const n = Number(value);
-
-  switch (unit) {
-    case "celsius":
-      return `${n.toFixed(1)} °C`;
-    case "percent":
-      return `${n.toFixed(1)} %`;
-    case "hpa":
-      return `${n.toFixed(1)} hPa`;
-    case "raw_capacitance":
-      return `${Math.round(n)} raw`;
-    default:
-      return unit ? `${n.toFixed(2)} ${unit}` : n.toFixed(2);
-  }
+  const { number, suffix } = formatValue({ value, unit });
+  return suffix ? `${number} ${suffix}` : number;
 }
 
 /**

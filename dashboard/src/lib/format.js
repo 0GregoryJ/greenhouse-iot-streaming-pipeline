@@ -1,15 +1,22 @@
 export const STALE_AFTER_MS = 30_000;
 
+/** Display timezone for chart and insight timestamps. */
+export const DISPLAY_TIME_ZONE = "America/Los_Angeles";
+
+export function celsiusToFahrenheit(celsius) {
+  return (Number(celsius) * 9) / 5 + 32;
+}
+
 export function formatValue({ value, unit }) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) {
-    return { number: "—", suffix: unit ?? "" };
+    return { number: "—", suffix: unit === "celsius" ? "°F" : (unit ?? "") };
   }
 
   const n = Number(value);
 
   switch (unit) {
     case "celsius":
-      return { number: n.toFixed(1), suffix: "°C" };
+      return { number: celsiusToFahrenheit(n).toFixed(1), suffix: "°F" };
     case "percent":
       return { number: n.toFixed(1), suffix: "%" };
     case "hpa":
@@ -60,27 +67,36 @@ export function formatAge(age) {
   return `${Math.floor(minutes / 60)}h ago`;
 }
 
-/** Chart / tooltip labels for UTC timestamps. */
+function pacificZoneLabel(date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIME_ZONE,
+    timeZoneName: "short",
+  }).formatToParts(date);
+
+  return parts.find((part) => part.type === "timeZoneName")?.value ?? "PT";
+}
+
+/** Chart / tooltip labels in Pacific time (PST/PDT). */
 export function formatChartTick(iso, resolution) {
   const date = new Date(iso);
 
   if (!Number.isFinite(date.getTime())) return "";
 
   if (resolution === "day") {
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      timeZone: "UTC",
+      timeZone: DISPLAY_TIME_ZONE,
     });
   }
 
-  return date.toLocaleString(undefined, {
+  return date.toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-    timeZone: "UTC",
-    hour12: false,
+    timeZone: DISPLAY_TIME_ZONE,
+    hour12: true,
   });
 }
 
@@ -89,26 +105,32 @@ export function formatChartTooltipTime(iso, resolution) {
 
   if (!Number.isFinite(date.getTime())) return "Unknown time";
 
+  const zone = pacificZoneLabel(date);
+
   if (resolution === "day") {
-    return date.toLocaleDateString(undefined, {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-      timeZone: "UTC",
-    }) + " UTC";
+    return (
+      date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: DISPLAY_TIME_ZONE,
+      }) +
+      ` ${zone}`
+    );
   }
 
   return (
-    date.toLocaleString(undefined, {
+    date.toLocaleString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
-      timeZone: "UTC",
-      hour12: false,
-    }) + " UTC"
+      timeZone: DISPLAY_TIME_ZONE,
+      hour12: true,
+    }) +
+    ` ${zone}`
   );
 }
 
